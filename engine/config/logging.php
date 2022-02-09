@@ -66,6 +66,40 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
         ],
+        'authenticate' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/authenticate/authenticate.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
+        'fee' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/fee/fee.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
+        'fee-error' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/fee/fee-error.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
+        'division' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/division/division.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
+        'division-error' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/division/division-error.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
 
         'slack' => [
             'driver' => 'slack',
