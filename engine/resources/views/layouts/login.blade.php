@@ -12,8 +12,8 @@
     <link href="{{ asset('/css/bootstrap-grid-h.css') }}" rel="stylesheet">
     <!-- Fonts -->
     <link href='//fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>
-    {!! HTML::style('css/jQueryUI/jquery-ui-1.10.3.custom.css') !!}
-    {!! HTML::style('css/datepicker/datepicker3.css') !!}
+    {!! Html::style('css/jQueryUI/jquery-ui-1.10.3.custom.css') !!}
+    {!! Html::style('css/datepicker/datepicker3.css') !!}
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -33,7 +33,7 @@
 <div class="container-fluid" style="background-color: #55acee;">
     <div class="row">
         <div class="col-md-3" style="padding-top: 1em">
-            {!! HTML::image('img/logo.png') !!}
+            {!! Html::image('img/logo.png') !!}
         </div>
         <div class="col-md-9 hospital">
                 <span  style="font-size: 2em" >
@@ -81,18 +81,18 @@
 <!-- special scripts for date picker-->
 
 <!-- jQuery 2.0.2 -->
-{!! HTML::script('js/jquery.min.js')!!}
+{!! Html::script('js/jquery.min.js')!!}
 
-{!! HTML::script('js/plugins/datepicker/bootstrap-datepicker.js')!!}
+{!! Html::script('js/plugins/datepicker/bootstrap-datepicker.js')!!}
 <script>
     $(function(){
         $('.datepicker').datepicker({ format: 'yyyy-mm-dd'})
     });
 </script>
 <!-- jQuery UI 1.10.3 -->
-{!! HTML::script('js/jquery-ui-1.10.3.min.js') !!}
+{!! Html::script('js/jquery-ui-1.10.3.min.js') !!}
 <!-- Bootstrap -->
-{!! HTML::script('js/bootstrap.min.js') !!}
+{!! Html::script('js/bootstrap.min.js') !!}
 
 <!--end special date picker scripts -->
 
