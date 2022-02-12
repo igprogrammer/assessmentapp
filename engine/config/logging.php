@@ -94,6 +94,19 @@ return [
             'days' => 14,
         ],
 
+        'assessment' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/assessment/assessment.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+        'assessment-error' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/assessment/assessment-error.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
         'division-error' => [
             'driver' => 'daily',
             'path' => storage_path('logs/division/division-error.log'),

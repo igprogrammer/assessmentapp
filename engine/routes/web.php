@@ -12,6 +12,33 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('test', function (){
+    $data = \Illuminate\Support\Facades\DB::connection('pgsql')->table('booking')->first();
+    dd($data);
+});
+Route::group(['prefix'=>'assessments'], function (){
+    Route::get('/search-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'searchAssessment'])->name('search-assessment');
+    Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterAssessment'])->name('filter');
+    Route::get('/get-attachment/{attachment_id}',[\App\Http\Controllers\Assessment\AssessmentController::class,'getFileContent'])->name('get-attachment/{attachment_id}');
+    Route::get('/assessment-items/{payment_id}/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'assessmentItems'])->name('assessment-items/{payment_id}/flag');
+    Route::get('/print-bill-payment',[\App\Http\Controllers\Printing\PrintingController::class,'printBillPayment'])->name('print-bill-payment');
+    Route::get('/print-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'printAssessment'])->name('print-assessment');
+    Route::get('/continue-assessment/{payment_id}',[\App\Http\Controllers\Assessment\AssessmentController::class,'continueAssessment'])->name('continue-assessment/{payment_id}');
+    Route::get('/continue-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'continueAssessment'])->name('continue-assessment');
+    Route::post('/save-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'saveAssessment']);
+    Route::get('/temp-assessment-details/{tempAssId}',[\App\Http\Controllers\Assessment\AssessmentController::class,'pendingAssessmentDetails'])->name('temp-assessment-details/{tempAssId}');
+    Route::get('/delete-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'deleteAssessment'])->name('delete-assessment');
+    Route::get('/pending',[\App\Http\Controllers\Assessment\AssessmentController::class,'pendingAssessment'])->name('pending');
+    Route::get('remove-item',[\App\Http\Controllers\Assessment\AssessmentController::class,'removeItem'])->name('remove-item');
+    Route::get('get-items',[\App\Http\Controllers\Assessment\AssessmentController::class,'getItems'])->name('get-items');
+    Route::get('/check-fee',[\App\Http\Controllers\Assessment\AssessmentController::class,'checkFee'])->name('check-fee');
+    Route::get('/display-fields',[\App\Http\Controllers\Assessment\AssessmentController::class,'displayFields'])->name('display-fields');
+    Route::get('/add-assessment-fee',[\App\Http\Controllers\Assessment\AssessmentController::class,'addAssessmentFee'])->name('add-assessment-fee');
+    Route::get('/get-selected-items',[\App\Http\Controllers\Assessment\AssessmentController::class,'getSelectedItems'])->name('get-selected-items');
+    Route::get('/new-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'newAssessment'])->name('new-assessment');
+    Route::get('/print-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'printAssessment'])->name('print-assessment');
+    Route::get('/list/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/individual/{flag}');
+});
 
 Route::group(['prefix'=>'divisions'], function (){
     Route::post('/update-division',[\App\Http\Controllers\Assessment\DivisionController::class,'updateDivision']);
@@ -48,4 +75,5 @@ Route::get('disable-user',[\App\Http\Controllers\Assessment\UserController::clas
 Route::get('users',[\App\Http\Controllers\Assessment\UserController::class,'users']);
 Route::get('dashboard',[\App\Http\Controllers\Assessment\PrivateController::class,'dashboard']);
 Route::post('authenticate',[\App\Http\Controllers\Assessment\LoginController::class,'authenticate']);
+Route::get('login',[\App\Http\Controllers\Assessment\LoginController::class,'login'])->name('login');
 Route::get('/',[\App\Http\Controllers\Assessment\LoginController::class,'login']);

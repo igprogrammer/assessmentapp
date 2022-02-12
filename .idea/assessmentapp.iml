@@ -120,6 +120,9 @@
       <excludeFolder url="file://$MODULE_DIR$/engine/vendor/psr/http-message" />
       <excludeFolder url="file://$MODULE_DIR$/engine/vendor/psr/container" />
       <excludeFolder url="file://$MODULE_DIR$/engine/vendor/laravelcollective/html" />
+      <excludeFolder url="file://$MODULE_DIR$/engine/vendor/dasprid/enum" />
+      <excludeFolder url="file://$MODULE_DIR$/engine/vendor/simplesoftwareio/simple-qrcode" />
+      <excludeFolder url="file://$MODULE_DIR$/engine/vendor/bacon/bacon-qr-code" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

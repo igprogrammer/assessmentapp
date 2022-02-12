@@ -10,6 +10,10 @@ class FeeItem extends Model
 {
     use HasFactory;
 
+    public static function getFeeItems($fee_id){
+        return FeeItem::where(['fee_id'=>$fee_id,'active'=>'yes'])->get();
+    }
+
     public static function updateFeeItem($feeItemId,$fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency){
         $fee_item = FeeItem::find($feeItemId);
         $fee_item->fee_id = $fee_id;
