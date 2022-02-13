@@ -832,65 +832,220 @@ class FeeCalculationController extends Controller
 
 
                         //return response as json
-                        echo json_encode(array('has_form'=>$has_form,
-                            'item_name'=>$item_name,
-                            'item_amount'=>$total_amount,
-                            'penalty_amount'=>$penalty,
-                            'currency'=>$currency,
-                            'days'=>$days,
-                            'copy_charge'=>$copy_charges,
-                            'success'=>'1',
-                            'number_of_files'=>$number_of_files));
+                        return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges,
+                            'success'=>'1', 'number_of_files'=>$number_of_files]);
 
                     }
                     elseif ($account_code == 440342){
+                        if ($fee->id == 7){//business licence
 
-                        if (strtolower($item_name) == 'business licence penalties'){
-                            $current_date = new \DateTime(date('Y-m-d'));
-                            $filing_date = new \DateTime(\date('Y-m-d',strtotime($filing_date . '+ ' . $days . ' days')));
-                            $diff = $current_date->diff($filing_date);
-                            $number_of_years = $diff->y;
-                            $months = $diff->m;
+                            $ExpireDate = $filing_date;
+                            $days = 21;
 
-                            $penalty_value = 0;
-                            $total_amount = 0;
-                            if ($months >= 1){
-                                for ($i = 0; $i < $months; $i++){
-                                    $penalty_value = $penalty + ($i * 0.02);
-                                    //$total_amount = $total_amount + ($item_amount * $penalty_value);
-                                    $total_amount = $item_amount * $penalty_value;
-                                    //echo $total_amount;
-                                    //echo "<br>";
+                            $Expire_year = date('Y',strtotime($ExpireDate));
+                            $Expire_month = date('m',strtotime($ExpireDate));
+                            $Expire_day = date('d',strtotime($ExpireDate));
+                            $current_month = date('m', strtotime($current_date));
+                            $current_year = date('Y', strtotime($current_date));
+
+                            $ExDate = new \DateTime($ExpireDate);
+                            $curDate = new \DateTime($current_date);
+
+                            $diff = $curDate->diff($ExDate);
+                            $year_difference= $diff->y;
+                            $ydiff = $diff->y;
+                            $yr_diff = $diff->y;
+                            $month_difference=$diff->m;
+                            $days_difference = $diff->d;
+
+                            if ($year_difference >= 1){
+
+                                $currentPayableLicenceAmount = 0;
+                                $fee_amount = 0;
+                                //check if to grant grace period to the current year
+                                if ((int)$Expire_month <= (int)$current_month){//if expire date is less than or equal to the current month
+
+                                    for ($year_difference; ((int)$current_year - (int)$year_difference) <= (int)$current_year; $year_difference--){
+
+                                        if ((int)$current_year == ((int)$current_year - (int)$year_difference)) {//current year
+                                            //check if to add grace period
+                                            $calculation_year = ($current_year - $year_difference);
+                                            //allow grace period
+                                            $ExpireD = date("Y-m-d", strtotime($ExpireDate . '+ ' . $days . ' days'));
+                                            $ExpiryMonth = date('m',strtotime($ExpireD));
+                                            $ExpiryDay = \date('d',strtotime($ExpireD));
+
+                                            $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
+                                            $calculation_date = date('Y-m-d',strtotime($calculation_date));
+                                            $calc_date = $calculation_date;
+
+                                            //echo $calculation_date;
+                                            //echo "<br>";
+
+
+                                            $today_date = date('Y-m-d');
+
+                                            if ($calculation_date < $today_date){
+
+
+                                                $calculation_date = new \DateTime($calculation_date);
+                                                $diff = $calculation_date->diff($curDate);
+                                                $difference_in_years = $diff->y;
+                                                $difference_months = $diff->m;
+                                                $difference_days = $diff->d;
+
+                                                if ($difference_days >= 30){
+
+                                                    $number_of_days = (int)fmod($difference_days,30);
+                                                    if ($number_of_days > 0){
+                                                        //$number_of_months = 1;//for cm
+                                                        $number_of_months = 0;
+                                                        $months = $difference_months + $number_of_months;
+                                                    }elseif ($number_of_days == 0){
+                                                        if ($difference_months > 0){
+                                                            $months = $difference_months;
+                                                        }else{
+                                                            $months = $difference_days/30;
+                                                        }
+
+                                                    }else{
+                                                        $months = $difference_months;
+                                                    }
+
+                                                }else{
+
+                                                    if ($difference_months > 0){
+                                                        $months = $difference_months;
+                                                    }else{
+                                                        $months = 0;
+                                                    }
+                                                }
+                                            }else{
+                                                $months = 0;
+                                            }
+
+
+                                            //call function to get penalty percentage by passing number of months elapsed
+                                            $penaltyPercentage = self::getPenaltyPercentage($months);
+
+
+                                        }
+                                        else{//not current year
+
+                                            $calculation_year = ($current_year - $year_difference);
+                                            //allow grace period
+                                            $ExpireD = date("Y-m-d", strtotime($ExpireDate . '+ ' . $days . ' days'));
+                                            $ExpiryMonth = date('m',strtotime($ExpireD));
+                                            $ExpiryDay = \date('d',strtotime($ExpireD));
+
+                                            $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
+                                            $calculation_date = date('Y-m-d',strtotime($calculation_date));
+
+                                            $today_date = date('Y-m-d');
+                                            $months = 0;
+                                            if ($calculation_date < $today_date){
+
+
+                                                $calculation_date = new \DateTime($calculation_date);
+                                                $diff = $calculation_date->diff($curDate);
+                                                $difference_in_years = $diff->y;
+                                                $difference_months = $diff->m;
+                                                $difference_days = $diff->d;
+
+
+
+                                                if ($difference_in_years > 0){
+                                                    $months = $difference_in_years * 12;
+                                                }
+
+                                                if ($difference_days >= 30){
+
+                                                    $number_of_days = (int)fmod($difference_days,30);
+                                                    if ($number_of_days > 0){
+                                                        //$number_of_months = 1;//for cm
+                                                        $number_of_months = 0;
+                                                        $months = $months + ($difference_months + $number_of_months);
+                                                    }elseif ($number_of_days == 0){
+                                                        if ($difference_months > 0){
+                                                            $months = $months + $difference_months;
+                                                        }else{
+                                                            $months = $months + $difference_days/30;
+                                                        }
+
+                                                    }else{
+                                                        $months = $months + $difference_months;
+                                                    }
+
+                                                }
+                                                else{
+
+                                                    if ($difference_months > 0){
+                                                        $months = $months + $difference_months;
+                                                    }else{
+                                                        $months = $months + 0;
+                                                    }
+                                                }
+
+
+                                            }
+
+                                            $penaltyPercentage = self::getPenaltyPercentage($months);
+
+
+                                        }
+                                    }
                                 }
-                            }else{
-                                $total_amount = $item_amount;
-                                $penalty = $penalty;
-                                $currency = $currency;
-                                $days = $days;
-                                $copy_charges = $copy_charges;
                             }
-                        }elseif (strtolower($item_name) == 'business licence fees'){
-                            $total_amount = $item_amount;
-                            $penalty = $penalty;
-                            $currency = $currency;
-                            $days = $days;
-                            $copy_charges = $copy_charges;
-                        }else{
-                            dd('ggg');
+                            else{
+
+                                $months = 0;
+
+                                if ($year_difference > 0){
+                                    $months = $year_difference * 12;
+                                }
+
+                                if ($days_difference >= 30){
+
+                                    $number_of_days = (int)fmod($days_difference,30);
+                                    if ($number_of_days > 0){
+                                        //$number_of_months = 1;//for cm
+                                        $number_of_months = 0;
+                                        $months = $months + ($month_difference + $number_of_months);
+                                    }elseif ($number_of_days == 0){
+                                        if ($month_difference > 0){
+                                            $months = $months + $month_difference;
+                                        }else{
+                                            $months = $months + $days_difference/30;
+                                        }
+
+                                    }else{
+                                        $months = $months + $days_difference;
+                                    }
+
+                                }
+                                else{
+
+                                    if ($month_difference > 0){
+                                        $months = $months + $month_difference;
+                                    }else{
+                                        $months = $months;
+                                    }
+                                }
+
+                                $penaltyPercentage = self::getPenaltyPercentage($months);
+
+                            }
+
+
 
                         }
 
+                        dd($fee_item);
+
 
                         //return response as json
-                        echo json_encode(array('has_form'=>$has_form,
-                            'item_name'=>$item_name,
-                            'item_amount'=>$total_amount,
-                            'penalty_amount'=>$penalty,
-                            'currency'=>$currency,
-                            'days'=>$days,
-                            'copy_charge'=>$copy_charges,
-                            'success'=>'1',
-                            'number_of_files'=>$number_of_files));
+                       return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                           'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files]);
 
                     }
                     else{
@@ -912,4 +1067,58 @@ class FeeCalculationController extends Controller
             return redirect()->back()->with('error-message',$message);
         }
     }
+
+
+    //get penalty percentage
+    public static function getPenaltyPercentage($months){
+        $currentYearPenaltyMonths = array();
+        if ($months > 0){
+            for ($i=0;$months>$i;$i++){
+                $currentYearPenaltyMonths[] = ($i + 1);
+            }
+        }
+
+        //Get PENALTY PERCENTAGE
+        $counter = 0;
+        $penaltyPercentage = 0;
+        if (!empty($currentYearPenaltyMonths)){
+            foreach ($currentYearPenaltyMonths as $currentYearPenaltyMonth){
+
+                if (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 1)){
+                    $penaltyPercentage = 0.25;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 2)){
+                    $penaltyPercentage = 0.27;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 3)){
+                    $penaltyPercentage = 0.29;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 4)){
+                    $penaltyPercentage = 0.31;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 5)){
+                    $penaltyPercentage = 0.33;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 6)){
+                    $penaltyPercentage = 0.35;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 7)){
+                    $penaltyPercentage = 0.37;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 8)){
+                    $penaltyPercentage = 0.39;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 9)){
+                    $penaltyPercentage = 0.41;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 10)){
+                    $penaltyPercentage = 0.43;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 11)){
+                    $penaltyPercentage = 0.45;
+                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 12) || $currentYearPenaltyMonths[$counter] > 12){
+                    $penaltyPercentage = 0.47;
+                }else{
+                    $penaltyPercentage = 0;
+                }
+
+                $counter++;
+            }
+        }
+
+        return $penaltyPercentage;
+
+
+    }
+
 }

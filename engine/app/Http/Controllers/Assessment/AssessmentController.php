@@ -758,7 +758,7 @@ class AssessmentController extends Controller
                                                 }
 
 
-                                                if ($difference_days > 30){
+                                                if ($difference_days >= 30){
                                                     //$days_in_months = (int)round(($difference_days/30));
                                                     //$months = $days_in_months;
 
