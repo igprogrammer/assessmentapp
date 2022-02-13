@@ -10,8 +10,14 @@ class FeeItem extends Model
 {
     use HasFactory;
 
-    public static function getFeeItems($fee_id){
-        return FeeItem::where(['fee_id'=>$fee_id,'active'=>'yes'])->get();
+    public static function getFeeItems($fee_id,$ltype){
+        $items = FeeItem::where(['fee_id'=>$fee_id,'active'=>'yes']);
+        if (strtolower($ltype) == 'schedule a' && $ltype != null){
+            $items = $items->where(['licenceType'=>$ltype]);
+        }
+        $items = $items->get();
+
+        return $items;
     }
 
     public static function updateFeeItem($feeItemId,$fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency){

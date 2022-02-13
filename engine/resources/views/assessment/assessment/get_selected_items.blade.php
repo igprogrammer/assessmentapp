@@ -78,7 +78,7 @@
                                         <b>Total</b> <?php echo $total_amount; ?>
                                         <input type="hidden" name="total_amount" value="<?php echo $total_amount; ?>">
                                     </td>
-                                    <td colspan="4"></td>
+                                    <td colspan="8"></td>
                                 </tr>
                     <?php }else{  ?>
                 <tr>

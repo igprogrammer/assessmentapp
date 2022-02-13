@@ -44,29 +44,35 @@ class AssessmentController extends Controller
             if (strtolower($flag) == 'individual'){
                 if (!empty($entityName)){
                     $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id ')
+                        ->join('users as u','u.id','=','p.user_id')
+                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id','name')
                         ->where('customer_name','LIKE','%'.$entityName.'%')->where(['p.user_id'=>Auth::user()->id])->get();
                 }elseif (!empty($entityNumber)){
                     $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id ')
+                        ->join('users as u','u.id','=','p.user_id')
+                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id','name')
                         ->where('company_number','LIKE','%'.$entityNumber.'%')->where(['p.user_id'=>Auth::user()->id])->get();
                 }else{
                     $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id ')
+                        ->join('users as u','u.id','=','p.user_id')
+                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id','name')
                         ->where(['p.user_id'=>Auth::user()->id])->get();
                 }
             }else{
                 if (!empty($entityName)){
                     $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id ')
+                        ->join('users as u','u.id','=','p.user_id')
+                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id','name')
                         ->where('customer_name','LIKE','%'.$entityName.'%')->get();
                 }elseif (!empty($entityNumber)){
                     $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id ')
+                        ->join('users as u','u.id','=','p.user_id')
+                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id','name')
                         ->where('company_number','LIKE','%'.$entityNumber.'%')->get();
                 }else{
                     $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id ')
+                        ->join('users as u','u.id','=','p.user_id')
+                        ->select('p.id as id','company_number','customer_name','currency','invoice','amount','customer_id','date_of_payment','p.user_id','name')
                         ->get();
                 }
             }
@@ -79,7 +85,6 @@ class AssessmentController extends Controller
 
         }catch (\Exception $exception){
             $message = "An error has occurred,please contact System administrator";
-            dd($exception->getMessage());
             GeneralController::exceptionHandler('Controller',$exception,'AssessmentController','searchAssessment','assessment-error');
             return redirect()->back()->with('error-message',$message);
         }
@@ -609,7 +614,17 @@ class AssessmentController extends Controller
     public function getItems(Request $request){
         $fee_id = $request->fee_id;
         if (!empty($fee_id)){
-            $fee_items = FeeItem::getFeeItems($fee_id);
+            if (in_array($fee_id,array(7,8,15))){
+                $items = FeeItem::getFeeItems($fee_id,'schedule A');
+            }else{
+                $items = FeeItem::getFeeItems($fee_id,null);
+            }
+
+            $fee_items = array();
+            foreach ($items as $item){
+                $fee_items[$item->id] = $item->item_name;
+            }
+
             return view('assessment.fees.get_items')->with('title','Fee items')->with('fee_items',$fee_items);
         }else{
             return response()->json(['success'=>2]);
@@ -668,9 +683,6 @@ class AssessmentController extends Controller
 
 
                             $current_month = date('m');
-
-                            //$filing_date = date("Y-m-d", strtotime($filing_date . '+ ' . $days . ' days'));
-
 
                             $current_date = date('Y-m-d');
                             $curr_date = new \DateTime($current_date);
@@ -899,7 +911,8 @@ class AssessmentController extends Controller
 
 
 
-                                    }else{
+                                    }
+                                    else{
 
                                         //decide which year to go back
                                         if ($filing_month <= $current_month){
@@ -1038,7 +1051,8 @@ class AssessmentController extends Controller
                                     'number_of_files'=>$number_of_files));
 
 
-                            }else{//year differences is less than one
+                            }
+                            else{//year differences is less than one
 
 
                                 //just calculate the number of months after the grace period
@@ -1131,15 +1145,10 @@ class AssessmentController extends Controller
                                     'success'=>'1',
                                     'number_of_files'=>$number_of_files));
 
-
-
-
-
-
-
                             }
 
-                        }else{// filing but no forms
+                        }
+                        else{// filing but no forms
                             $total_amount = $item_amount;
                             $penalty = $penalty;
                             $currency = $currency;
@@ -1161,14 +1170,7 @@ class AssessmentController extends Controller
                     }
                     else{//not filing
 
-                        if (in_array($fee->id, array(61))){
-                            $total_amount = $item_amount;
-                            $penalty = $penalty;
-                            $currency = $currency;
-                            $days = $days;
-                            $copy_charges = $copy_charges;
-                        }
-                        elseif (in_array($fee->id, array(52,53))){
+                        if (in_array($fee->id, array(61,52,53,10,11,14,30,42,43,51))){
                             $total_amount = $item_amount;
                             $penalty = $penalty;
                             $currency = $currency;
@@ -1233,15 +1235,10 @@ class AssessmentController extends Controller
                                             $calculation_date = $calculation_year.'-'.$file_month.'-'.$filing_day;
                                             $calculation_date = date('Y-m-d',strtotime($calculation_date));
 
-                                            //echo $calculation_date;
-                                            //echo "<br>";
-
 
                                             $today_date = date('Y-m-d');
 
                                             if ($calculation_date < $today_date){
-
-                                                //$file_date = new \DateTime($file_date);
 
                                                 $calculation_date = new \DateTime($file_date);
                                                 $diff = $calculation_date->diff($curr_date);
@@ -1267,8 +1264,6 @@ class AssessmentController extends Controller
 
 
                                                 if ($difference_days > 30){
-                                                    //$days_in_months = (int)round(($difference_days/30));
-                                                    //$months = $days_in_months;
 
                                                     $number_of_days = (int)fmod($difference_days,30);
                                                     if ($number_of_days > 0){
@@ -1294,13 +1289,6 @@ class AssessmentController extends Controller
 
 
                                             $fee_amount = $months * $penalty;
-                                            //$initial_amount = $fee_amount + $item_amount;
-                                            //echo 'Initial amount: '.$initial_amount = $fee_amount + $item_amount;
-                                            //echo "<br>";
-
-
-                                        }else{
-
 
                                         }
 
@@ -1318,9 +1306,6 @@ class AssessmentController extends Controller
 
                                         }else{
 
-                                            //echo $current_year-$yr_diff;
-                                            //echo "<br>";
-
                                             //grant grace period to the year before the current year
                                             if (($current_year - 1) == ($current_year - $yr_diff)){
 
@@ -1329,8 +1314,6 @@ class AssessmentController extends Controller
                                                 $calculation_year = ($current_year - $yr_diff);
 
                                                 //allow grace period
-                                                //$file_date = date("Y-m-d", strtotime($filing_date . '+ ' . $days . ' days'));
-                                                //$file_date = date("Y-m-d", strtotime($filing_date . '+ ' . $days . ' days'));
                                                 $file_month = date('m',strtotime($filing_date));
 
 
@@ -1339,9 +1322,6 @@ class AssessmentController extends Controller
                                                 $calculation_date = $calculation_year.'-'.$file_month.'-'.$filing_day;
 
                                                 $calculation_date = date("Y-m-d", strtotime($calculation_date . '+ ' . $days . ' days'));
-
-                                                //echo $calculation_date;
-                                                //echo "<br>";
 
 
                                                 $today_date = date('Y-m-d');
@@ -1375,8 +1355,6 @@ class AssessmentController extends Controller
 
 
                                                     if ($difference_days > 30){
-                                                        //$days_in_months = (int)round(($difference_days/30));
-                                                        //$months = $days_in_months;
 
                                                         $number_of_days = (int)fmod($difference_days,30);
                                                         if ($number_of_days > 0){
@@ -1401,12 +1379,7 @@ class AssessmentController extends Controller
                                                 $months = $months + $years_in_months;
 
                                                 $fee_amount = $months * $penalty;
-                                                //$initial_amount = $fee_amount + $item_amount;
-                                                //echo 'Initial: '.$initial_amount = $fee_amount + $item_amount;
-                                                //echo "<br>";
 
-                                            }else{
-                                                //dd('Not the year less 1 value to the current yeardddd');
                                             }
 
 
@@ -1419,20 +1392,7 @@ class AssessmentController extends Controller
 
                                 }
 
-
-                                //dd($initial_amount);
-                                // dd('End loop');
                                 $total_amount = $fee_amount;
-
-                                /* echo json_encode(array('has_form'=>$has_form,
-                                     'item_name'=>$item_name,
-                                     'item_amount'=>$fee_amount,
-                                     'penalty_amount'=>$penalty,
-                                     'currency'=>$currency,
-                                     'days'=>$days,
-                                     'copy_charge'=>$copy_charges,
-                                     'success'=>'1',
-                                     'number_of_files'=>$number_of_files));*/
 
 
                             }else{//year differences is less than one
@@ -1475,8 +1435,6 @@ class AssessmentController extends Controller
 
 
                                 if ($difference_days > 30){
-                                    //$days_in_months = (int)round(($difference_days/30));
-                                    //$months = $days_in_months;
 
                                     $number_of_days = (int)fmod($difference_days,30);
                                     if ($number_of_days > 0){
@@ -1510,16 +1468,10 @@ class AssessmentController extends Controller
 
 
                                 //create response
-                                echo json_encode(array('has_form'=>$has_form,
-                                    'item_name'=>$item_name,
-                                    'item_amount'=>$total_amount,
-                                    'penalty_amount'=>$penalty,
-                                    'currency'=>$currency,
-                                    'days'=>$days,
-                                    'copy_charge'=>$copy_charges,
+                                return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
+                                    'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges,
                                     'success'=>'1',
-                                    'number_of_files'=>$number_of_files));
-
+                                    'number_of_files'=>$number_of_files]);
 
                             }
 
@@ -1530,31 +1482,27 @@ class AssessmentController extends Controller
 
 
                         }
-                        elseif (in_array($fee->id,array(31))){
+                        elseif (in_array($fee->id,array(31))){//perusal
                             $total_amount = $number_of_files * $item_amount;
                             $penalty = $penalty;
                             $currency = $currency;
                             $days = $days;
                             $copy_charges = $copy_charges;
-                        }else{
-                            dd('It is ending here');
+                        }
+                        else{
+                            return response()->json(['success'=>13,'Invalid Item code']);
                         }
 
-
-                        echo json_encode(array('has_form'=>$has_form,
-                            'item_name'=>$item_name,
-                            'item_amount'=>$total_amount,
-                            'penalty_amount'=>$penalty,
-                            'currency'=>$currency,
-                            'days'=>$days,
-                            'copy_charge'=>$copy_charges,
+                        return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
+                            'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges,
                             'success'=>'1',
-                            'number_of_files'=>$number_of_files));
+                            'number_of_files'=>$number_of_files]);
 
                     }
 
 
-                }elseif ($account_code == 440332){//Business Names
+                }
+                elseif ($account_code == 440332){//Business Names
 
                     if ($fee->id == 2){//payment of annual maintenance fee
 
@@ -1574,40 +1522,34 @@ class AssessmentController extends Controller
                             $copy_charges = $copy_charges;
 
                         }
-                    }elseif ($fee->id == 13){//change fees
+                    }
+                    elseif (in_array($fee->id, array(9,13,41,49,60))){//change fees
                         $total_amount = $fee_item->item_amount;
                         $penalty = $penalty;
                         $currency = $currency;
                         $days = $days;
                         $copy_charges = $copy_charges;
-                    }elseif ($fee->id == 66){
+                    }
+                    elseif ($fee->id == 66){
                         $total_amount = $number_of_files * $item_amount;
                         $penalty = $penalty;
                         $currency = $currency;
                         $days = $days;
                         $copy_charges = $copy_charges;
-                    }elseif ($fee->id == 41){
-                        $total_amount = $item_amount;
-                        $penalty = $penalty;
-                        $currency = $currency;
-                        $days = $days;
-                        $copy_charges = $copy_charges;
                     }else{
-
+                        $total_amount = 0;
+                        $penalty = 0;
+                        $currency = 0;
+                        $days = 0;
+                        $copy_charges = 0;
                     }
 
                     //return response as json
-                    echo json_encode(array('has_form'=>$has_form,
-                        'item_name'=>$item_name,
-                        'item_amount'=>$total_amount,
-                        'penalty_amount'=>$penalty,
-                        'currency'=>$currency,
-                        'days'=>$days,
-                        'copy_charge'=>$copy_charges,
-                        'success'=>'1',
-                        'number_of_files'=>$number_of_files));
+                    return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                        'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files]);
 
-                }elseif ($account_code == 440341){
+                }
+                elseif ($account_code == 440341){
                     $total_amount = $item_amount;
                     $penalty = $penalty;
                     $currency = $currency;
@@ -1626,7 +1568,8 @@ class AssessmentController extends Controller
                         'success'=>'1',
                         'number_of_files'=>$number_of_files));
 
-                }elseif ($account_code == 440342){
+                }
+                elseif ($account_code == 440342){
 
                     if (strtolower($item_name) == 'business licence penalties'){
                         $current_date = new \DateTime(date('Y-m-d'));
@@ -1676,25 +1619,14 @@ class AssessmentController extends Controller
                         'number_of_files'=>$number_of_files));
 
                 }
-
                 else{//Not any code
-
+                    return response()->json(['success'=>12]);//Invalid account code
                 }
-
-                //generate response values
-                /*echo json_encode(array('has_form'=>$has_form,
-                    'item_name'=>$item_name,
-                    'item_amount'=>$total_amount,
-                    'penalty_amount'=>$penalty,
-                    'currency'=>$currency,
-                    'days'=>$days,
-                    'copy_charge'=>$copy_charges,
-                    'success'=>'1'));*/
             }
 
 
         }else{
-            echo json_encode(array('success'=>'2'));
+            return response()->json(['success'=>2]);
         }
     }
 
@@ -1730,7 +1662,8 @@ class AssessmentController extends Controller
         $division_id = $request->division_id;
         $fee_account_id = $request->fee_account_id;
         $filing_date = $request->filing_date;
-        $fyear = $request->year;
+        $fDate = $filing_date;
+        $fyear = (int)$request->year;
         $fee_id = $request->fee_id;
         $item_amount = $request->item_amount;
         $item_name = $request->item_name;
@@ -1748,6 +1681,8 @@ class AssessmentController extends Controller
             $number_of_files = '1';
         }
 
+        $item = FeeItem::find($item_id);
+        $fee_id = $fee_id ?? $item->fee_id;
 
         $total_amount = 0;//initialize total amount for each assessment item
         if (!empty($item_id)){
@@ -1867,19 +1802,17 @@ class AssessmentController extends Controller
                 if ($account_code == 440331){//company section
 
                     //check if it is filing
-                    if (in_array($fee->id, array(18,19,20,21,25,26))){//it is filing
+                    if (in_array($fee->id, array(18,19,20,21,69,70))){//it is filing
 
                         if ($has_form == 'yes'){//it has forms
 
 
-                            $current_month = date('m');
-
-                            //$filing_date = date("Y-m-d", strtotime($filing_date . '+ ' . $days . ' days'));
+                            $current_month = (int)date('m');
 
 
                             $current_date = date('Y-m-d');
                             $curr_date = new \DateTime($current_date);
-                            $current_year = date('Y');
+                            $current_year = (int)date('Y');
                             $date_of_filing = new \DateTime($filing_date);
                             $filing_month = \date('m',strtotime($filing_date));//filing month
                             $current_month_and_year = \date('Y-m',strtotime($current_date));//current month
@@ -1903,7 +1836,7 @@ class AssessmentController extends Controller
                             }
 
                             $filing_year = date('Y',strtotime($filing_date));
-                            $filing_month = date('m',strtotime($filing_date));
+                            $filing_month = (int)date('m',strtotime($filing_date));
                             $filing_day = date('d',strtotime($filing_date));
                             //check if year differences is greater than one
 
@@ -1911,6 +1844,7 @@ class AssessmentController extends Controller
 
                                 $initial_amount = 0;
                                 $fee_amount = 0;
+
 
                                 //check if to grant grace period to the current year
                                 if ($filing_month <= $current_month){// filing month less than or equal to the current month
@@ -1926,7 +1860,6 @@ class AssessmentController extends Controller
                                             $file_date = date("Y-m-d", strtotime($filing_date . '+ ' . $days . ' days'));
                                             $file_month = date('m',strtotime($file_date));
                                             $filing_day = \date('d',strtotime($file_date));
-
 
                                             $calculation_date = $calculation_year.'-'.$file_month.'-'.$filing_day;
                                             $calculation_date = date('Y-m-d',strtotime($calculation_date));
@@ -1971,7 +1904,8 @@ class AssessmentController extends Controller
                                                 }
 
 
-                                            }else{//calculation greater than today date
+                                            }
+                                            else{//calculation greater than today date
                                                 $months = 0;
                                             }
 
@@ -1981,63 +1915,69 @@ class AssessmentController extends Controller
                                             $initial_amount = $fee_amount + $item_amount;
                                             //echo 'Initial amount: '.$initial_amount = $fee_amount + $item_amount;
                                             //echo "<br>";
+                                            $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id,'fyear'=>$current_year,'fyear2'=>$current_year])->first();
 
                                             //save initial amount if year not selected by user
                                             if ($fyear == 0){
                                                 //start save initial amount as a first entry of payment
-                                                $temp_item = new TempItem();
-                                                $temp_item->user_id = Auth::user()->id;
-                                                $temp_item->fee_item_id = $item_id;
-                                                $temp_item->temp_payment_id = $temp_payment_id;
-                                                //$temp_item->fee_amount = $item_amount;
-                                                $temp_item->fee_amount = $initial_amount;
-                                                $temp_item->date_of_payment = $date_of_payment;
-                                                $temp_item->account_code = $account_code;
-                                                $temp_item->month = $month;
-                                                $temp_item->year = $current_year;
-                                                $temp_item->fname = $form;
-                                                $temp_item->fyear2 = $current_year;
-                                                $temp_item->fyear = $current_year;
-                                                $temp_item->filing_date = date('d/m/Y',strtotime($filing_date));
-                                                $temp_item->save();
+                                                if (empty($checkTempItem)){
+                                                    $temp_item = new TempItem();
+                                                    $temp_item->user_id = Auth::user()->id;
+                                                    $temp_item->fee_item_id = $item_id;
+                                                    $temp_item->temp_payment_id = $temp_payment_id;
+                                                    //$temp_item->fee_amount = $item_amount;
+                                                    $temp_item->fee_amount = $initial_amount;
+                                                    $temp_item->date_of_payment = $date_of_payment;
+                                                    $temp_item->account_code = $account_code;
+                                                    $temp_item->month = $month;
+                                                    $temp_item->year = $current_year;
+                                                    $temp_item->fname = $form;
+                                                    $temp_item->fyear2 = $current_year;
+                                                    $temp_item->fyear = $current_year;
+                                                    $temp_item->filing_date = date('d/m/Y',strtotime($fDate));
+                                                    $temp_item->save();
+                                                }
 
                                                 //End save initial amount
                                             }
 
 
                                             //start save initial amount as a first entry of payment
-                                            /*if ($fyear == $current_year){
-                                                $temp_item = new TempItem();
-                                                $temp_item->user_id = Auth::user()->id;
-                                                $temp_item->fee_item_id = $item_id;
-                                                $temp_item->temp_payment_id = $temp_payment_id;
-                                                //$temp_item->fee_amount = $item_amount;
-                                                $temp_item->fee_amount = $initial_amount;
-                                                $temp_item->date_of_payment = $date_of_payment;
-                                                $temp_item->account_code = $account_code;
-                                                $temp_item->month = $month;
-                                                $temp_item->year = $current_year;
-                                                $temp_item->fname = $form;
-                                                $temp_item->fyear2 = $current_year;
-                                                $temp_item->fyear = $current_year;
-                                                $calculation_date = $current_year.'-'.$filing_month.'-'.\date('d',strtotime($filing_date));
-                                                $temp_item->filing_date = date('d/m/Y',strtotime($calculation_date));
-                                                $temp_item->save();
-                                            }*/
+                                            if ($fyear == $current_year){
+                                                if (empty($checkTempItem)){
+                                                    $temp_item = new TempItem();
+                                                    $temp_item->user_id = Auth::user()->id;
+                                                    $temp_item->fee_item_id = $item_id;
+                                                    $temp_item->temp_payment_id = $temp_payment_id;
+                                                    //$temp_item->fee_amount = $item_amount;
+                                                    $temp_item->fee_amount = $initial_amount;
+                                                    $temp_item->date_of_payment = $date_of_payment;
+                                                    $temp_item->account_code = $account_code;
+                                                    $temp_item->month = $month;
+                                                    $temp_item->year = $current_year;
+                                                    $temp_item->fname = $form;
+                                                    $temp_item->fyear2 = $current_year;
+                                                    $temp_item->fyear = $current_year;
+                                                    $calculation_date = $current_year.'-'.$filing_month.'-'.\date('d',strtotime($filing_date));
+                                                    $temp_item->filing_date = date('d/m/Y',strtotime($calculation_date));
+                                                    $temp_item->save();
+                                                }
+                                            }
 
                                             /*End save initial amount*/
 
 
 
-                                        }else{
-
-
                                         }
-
-
+                                        else{
+                                            /**
+                                             * Do nothing for previous years
+                                             */
+                                        }
                                     }
 
-                                }else{//filing month is greater than current month,don't give any grace period
+                                }
+                                else{//filing month is greater than current month,don't give any grace period
                                     //dd('The filing month is greater than current moth');
 
 
@@ -2045,12 +1985,13 @@ class AssessmentController extends Controller
                                     //grant grace period to the year less to the current year
                                     for ($yr_diff; ($current_year - $yr_diff)<=$current_year; $yr_diff--){
                                         if ($current_year == ($current_year - $yr_diff)) {
-
+                                            /**
+                                             *exclude current year
+                                             */
                                         }else{
 
                                             //echo $current_year-$yr_diff;
                                             //echo "<br>";
-
                                             //grant grace period to the year before the current year
                                             if (($current_year - 1) == ($current_year - $yr_diff)){
 
@@ -2109,7 +2050,8 @@ class AssessmentController extends Controller
                                                     }
 
 
-                                                }else{//calculation greater than today date
+                                                }
+                                                else{//calculation greater than today date
                                                     $months = 0;
                                                 }
 
@@ -2118,50 +2060,55 @@ class AssessmentController extends Controller
                                                 //echo 'Initial: '.$initial_amount = $fee_amount + $item_amount;
                                                 //echo "<br>";
 
-                                                /*if ($fyear == 0){
-                                                    //start save other amount for payment
-                                                    $temp_item = new TempItem();
-                                                    $temp_item->user_id = Auth::user()->id;
-                                                    $temp_item->fee_item_id = $item_id;
-                                                    $temp_item->temp_payment_id = $temp_payment_id;
-                                                    $temp_item->fee_amount = $initial_amount;
-                                                    $temp_item->date_of_payment = $date_of_payment;
-                                                    $temp_item->account_code = $account_code;
-                                                    $temp_item->month = $month;
-                                                    $temp_item->year = $current_year;
-                                                    $temp_item->fname = $form;
-                                                    $temp_item->fyear2 = $calculation_year;
-                                                    $temp_item->fyear = $calculation_year;
-                                                    $temp_item->filing_date = date('d/m/Y',strtotime($filing_date));
-                                                    $temp_item->save();
-
-                                                    //End save payment amount
-                                                }*/
-
+                                                $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id,'fyear'=>$calculation_year,'fyear2'=>$calculation_year])->first();
                                                 //start save other amount for payment
-                                                /*if ($fyear == $calculation_year){
-
-                                                }*/
-                                                $temp_item = new TempItem();
-                                                $temp_item->user_id = Auth::user()->id;
-                                                $temp_item->fee_item_id = $item_id;
-                                                $temp_item->temp_payment_id = $temp_payment_id;
-                                                $temp_item->fee_amount = $initial_amount;
-                                                $temp_item->date_of_payment = $date_of_payment;
-                                                $temp_item->account_code = $account_code;
-                                                $temp_item->month = $month;
-                                                $temp_item->year = $current_year;
-                                                $temp_item->fname = $form;
-                                                $temp_item->fyear2 = $calculation_year;
-                                                $temp_item->fyear = $calculation_year;
-                                                $calculation_date = $calculation_year.'-'.$filing_month.'-'.\date('d',strtotime($filing_date));
-                                                $temp_item->filing_date = date('d/m/Y',strtotime($calculation_date));
-                                                $temp_item->save();
+                                                if ($fyear == 0){
+                                                    if (empty($checkTempItem)){
+                                                        $temp_item = new TempItem();
+                                                        $temp_item->user_id = Auth::user()->id;
+                                                        $temp_item->fee_item_id = $item_id;
+                                                        $temp_item->temp_payment_id = $temp_payment_id;
+                                                        $temp_item->fee_amount = $initial_amount;
+                                                        $temp_item->date_of_payment = $date_of_payment;
+                                                        $temp_item->account_code = $account_code;
+                                                        $temp_item->month = $month;
+                                                        $temp_item->year = $current_year;
+                                                        $temp_item->fname = $form;
+                                                        $temp_item->fyear2 = $calculation_year;
+                                                        $temp_item->fyear = $calculation_year;
+                                                        $temp_item->filing_date = date('d/m/Y',strtotime($fDate));
+                                                        $temp_item->save();
+                                                    }
+                                                }else{
+                                                    if ($fyear == $calculation_year){
+                                                        if (empty($checkTempItem)){
+                                                            $temp_item = new TempItem();
+                                                            $temp_item->user_id = Auth::user()->id;
+                                                            $temp_item->fee_item_id = $item_id;
+                                                            $temp_item->temp_payment_id = $temp_payment_id;
+                                                            $temp_item->fee_amount = $initial_amount;
+                                                            $temp_item->date_of_payment = $date_of_payment;
+                                                            $temp_item->account_code = $account_code;
+                                                            $temp_item->month = $month;
+                                                            $temp_item->year = $current_year;
+                                                            $temp_item->fname = $form;
+                                                            $temp_item->fyear2 = $calculation_year;
+                                                            $temp_item->fyear = $calculation_year;
+                                                            $calculation_date = $calculation_year.'-'.$filing_month.'-'.\date('d',strtotime($filing_date));
+                                                            //$temp_item->filing_date = date('d/m/Y',strtotime($calculation_date));
+                                                            $temp_item->filing_date = date('d/m/Y',strtotime($fDate));
+                                                            $temp_item->save();
+                                                        }
+                                                    }
+                                                }
 
                                                 //End save payment amount
 
-                                            }else{
-                                                //dd('Not the year less 1 value to the current yeardddd');
+                                            }
+                                            else{
+                                                /**
+                                                 * Not the year less 1 value to the current year
+                                                 */
                                             }
 
 
@@ -2183,12 +2130,11 @@ class AssessmentController extends Controller
 
                                 for ($ydiff; ($current_year - $ydiff)<=$current_year; $ydiff--){
                                     if ($current_year == ($current_year - $ydiff)){
-
-                                        //dd('In if');
-
-
-
-                                    }else{
+                                        /**
+                                         * Do nothing for the current year
+                                         */
+                                    }
+                                    else{
 
                                         //decide which year to go back
                                         if ($filing_month <= $current_month){
@@ -2236,54 +2182,53 @@ class AssessmentController extends Controller
                                             //echo $total_amt = $total_amt + $amt;
                                             $total_amt = $total_amt + $amt;
                                             //echo "<br>";
-
-
-                                            /*if ($fyear == $calculation_year){
-                                                //start save other amount for payment
-                                                $temp_item = new TempItem();
-                                                $temp_item->user_id = Auth::user()->id;
-                                                $temp_item->fee_item_id = $item_id;
-                                                $temp_item->temp_payment_id = $temp_payment_id;
-                                                $temp_item->fee_amount = $amt;
-                                                $temp_item->date_of_payment = $date_of_payment;
-                                                $temp_item->account_code = $account_code;
-                                                $temp_item->month = $month;
-                                                $temp_item->year = $current_year;
-                                                $temp_item->fname = $form;
-                                                $temp_item->fyear2 = $calculation_year;
-                                                $temp_item->fyear = $calculation_year;
-                                                $temp_item->filing_date = date('d/m/Y',strtotime($filing_date));
-                                                $temp_item->save();
-
-                                                //End save payment amount
-                                            }*/
+                                            $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id,'fyear'=>$calculation_year,'fyear2'=>$calculation_year])->first();
 
                                             //start save other amount for payment
-                                            /*if ($fyear == $calculation_year){
+                                            if (empty($checkTempItem)){
 
-                                            }*/
+                                                if ($fyear == 0){
+                                                    $temp_item = new TempItem();
+                                                    $temp_item->user_id = Auth::user()->id;
+                                                    $temp_item->fee_item_id = $item_id;
+                                                    $temp_item->temp_payment_id = $temp_payment_id;
+                                                    $temp_item->fee_amount = $amt;
+                                                    $temp_item->date_of_payment = $date_of_payment;
+                                                    $temp_item->account_code = $account_code;
+                                                    $temp_item->month = $month;
+                                                    $temp_item->year = $current_year;
+                                                    $temp_item->fname = $form;
+                                                    $temp_item->fyear2 = $calculation_year;
+                                                    $temp_item->fyear = $calculation_year;
+                                                    $calculation_date = $calculation_year.'-'.$filing_month.'-'.\date('d',strtotime($filing_date));
+                                                    //$temp_item->filing_date = date('d/m/Y',strtotime($calculation_date));
+                                                    $temp_item->filing_date = date('d/m/Y', strtotime($fDate));
+                                                    $temp_item->save();
+                                                }else{
+                                                    if ($fyear == $calculation_year){
+                                                        $temp_item = new TempItem();
+                                                        $temp_item->user_id = Auth::user()->id;
+                                                        $temp_item->fee_item_id = $item_id;
+                                                        $temp_item->temp_payment_id = $temp_payment_id;
+                                                        $temp_item->fee_amount = $amt;
+                                                        $temp_item->date_of_payment = $date_of_payment;
+                                                        $temp_item->account_code = $account_code;
+                                                        $temp_item->month = $month;
+                                                        $temp_item->year = $current_year;
+                                                        $temp_item->fname = $form;
+                                                        $temp_item->fyear2 = $calculation_year;
+                                                        $temp_item->fyear = $calculation_year;
+                                                        $temp_item->filing_date = date('d/m/Y',strtotime($fDate));
+                                                        $temp_item->save();
+                                                    }
+                                                }
 
-                                            $temp_item = new TempItem();
-                                            $temp_item->user_id = Auth::user()->id;
-                                            $temp_item->fee_item_id = $item_id;
-                                            $temp_item->temp_payment_id = $temp_payment_id;
-                                            $temp_item->fee_amount = $amt;
-                                            $temp_item->date_of_payment = $date_of_payment;
-                                            $temp_item->account_code = $account_code;
-                                            $temp_item->month = $month;
-                                            $temp_item->year = $current_year;
-                                            $temp_item->fname = $form;
-                                            $temp_item->fyear2 = $calculation_year;
-                                            $temp_item->fyear = $calculation_year;
-                                            $calculation_date = $calculation_year.'-'.$filing_month.'-'.\date('d',strtotime($filing_date));
-                                            $temp_item->filing_date = date('d/m/Y',strtotime($calculation_date));
-                                            $temp_item->save();
-
+                                            }
                                             //End save payment amount
 
 
-
-                                        }else{//filing month greater than current month of the current year
+                                        }
+                                        else{//filing month greater than current month of the current year
                                             $calculation_year = ($current_year - ($ydiff + 1));
 
                                             if (($current_year - 1) == ($current_year - ($ydiff + 1))){
@@ -2406,24 +2351,13 @@ class AssessmentController extends Controller
 
                                 //dd('End loop');
 
-                                echo json_encode(array('has_form'=>$has_form,
-                                    'item_name'=>$item_name,
-                                    'item_amount'=>$total_amount,
-                                    'penalty_amount'=>$penalty,
-                                    'currency'=>$currency,
-                                    'days'=>$days,
-                                    'copy_charge'=>$copy_charges,
-                                    'success'=>'1',
-                                    'temp_payment_id'=>$temp_payment_id,
-                                    'company_number'=>$company_number,
-                                    'company_name'=>$company_name,
-                                    'filling_date'=>$filing_date,
-                                    'phone_number'=>$phone_number,
-                                    'expire_days'=>$expire_days,
-                                    'number_of_files'=>$number_of_files));
+                                return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                                    'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
+                                    'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
+                                    'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files]);
 
-
-                            }else{//year differences is less than one
+                            }
+                            else{//year differences is less than one
 
 
                                 //just calculate the number of months after the grace period
@@ -2548,68 +2482,46 @@ class AssessmentController extends Controller
                                 /*End save item amount*/
 
                                 //create response
-                                echo json_encode(array('has_form'=>$has_form,
-                                    'item_name'=>$item_name,
-                                    'item_amount'=>$total_amount,
-                                    'penalty_amount'=>$penalty,
-                                    'currency'=>$currency,
-                                    'days'=>$days,
-                                    'copy_charge'=>$copy_charges,
-                                    'success'=>'1',
-                                    'temp_payment_id'=>$temp_payment_id,
-                                    'company_number'=>$company_number,
-                                    'company_name'=>$company_name,
-                                    'filling_date'=>$filing_date,
-                                    'phone_number'=>$phone_number,
-                                    'expire_days'=>$expire_days,
-                                    'number_of_files'=>$number_of_files));
+                               return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                                   'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
+                                   'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
+                                   'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files]);
 
                             }
 
-                        }else{// filing but no forms
+                        }
+                        else{// filing but no forms
                             $total_amount = $item_amount;
                             $penalty = $penalty;
                             $currency = $currency;
                             $days = $days;
                             $copy_charges = $copy_charges;
 
-                            echo json_encode(array('has_form'=>$has_form,
-                                'item_name'=>$item_name,
-                                'item_amount'=>$total_amount,
-                                'penalty_amount'=>$penalty,
-                                'currency'=>$currency,
-                                'days'=>$days,
-                                'copy_charge'=>$copy_charges,
-                                'success'=>'1',
-                                'temp_payment_id'=>$temp_payment_id,
-                                'company_number'=>$company_number,
-                                'company_name'=>$company_name,
-                                'filling_date'=>$filing_date,
-                                'phone_number'=>$phone_number,
-                                'expire_days'=>$expire_days,
-                                'number_of_files'=>$number_of_files));
+                            return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                                'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
+                                'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
+                                'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files]);
 
 
                         }
                     }
                     else{//not filing
 
-                        if ($fee->id == 61){
-                            $total_amount = $item_amount;
-                            $penalty = $penalty;
-                            $currency = $currency;
-                            $days = $days;
-                            $copy_charges = $copy_charges;
-                        }elseif ($fee->id == 52){
+                        if ($fee->id == 61){//Amendment
                             $total_amount = $item_amount;
                             $penalty = $penalty;
                             $currency = $currency;
                             $days = $days;
                             $copy_charges = $copy_charges;
                         }
-                        elseif (in_array($fee->id, array(25,26,27))){
-
-                            //Start late filing
+                        elseif ($fee->id == 52){//Stamp duty
+                            $total_amount = $item_amount;
+                            $penalty = $penalty;
+                            $currency = $currency;
+                            $days = $days;
+                            $copy_charges = $copy_charges;
+                        }
+                        elseif (in_array($fee->id, array(25,26,27))){//Late filing
 
                             $current_date = date('Y-m-d');
                             $curr_date = new \DateTime($current_date);
@@ -2731,15 +2643,18 @@ class AssessmentController extends Controller
                                             //echo "<br>";
 
 
-                                        }else{
-
-
+                                        }
+                                        else{
+                                            /**
+                                             * Do nothing the previous years
+                                             */
                                         }
 
 
                                     }
 
-                                }else{//filing month is greater than current month,don't give any grace period
+                                }
+                                else{//filing month is greater than current month,don't give any grace period
                                     //dd('The filing month is greater than current moth');
 
 
@@ -2747,7 +2662,9 @@ class AssessmentController extends Controller
                                     //grant grace period to the year less to the current year
                                     for ($yr_diff; ($current_year - $yr_diff)<=$current_year; $yr_diff--){
                                         if ($current_year == ($current_year - $yr_diff)) {
-
+                                            /**
+                                             * Do nothing the current year
+                                             */
                                         }else{
 
                                             //echo $current_year-$yr_diff;
@@ -2856,18 +2773,9 @@ class AssessmentController extends Controller
                                 // dd('End loop');
                                 $total_amount = $fee_amount;
 
-                                /* echo json_encode(array('has_form'=>$has_form,
-                                     'item_name'=>$item_name,
-                                     'item_amount'=>$fee_amount,
-                                     'penalty_amount'=>$penalty,
-                                     'currency'=>$currency,
-                                     'days'=>$days,
-                                     'copy_charge'=>$copy_charges,
-                                     'success'=>'1',
-                                     'number_of_files'=>$number_of_files));*/
 
-
-                            }else{//year differences is less than one
+                            }
+                            else{//year differences is less than one
 
 
                                 //just calculate the number of months after the grace period
@@ -2883,7 +2791,8 @@ class AssessmentController extends Controller
                                 if ($calculation_date >= $current_date){
                                     $months = 0;
                                     $years_in_months = 0;
-                                }else{
+                                }
+                                else{
 
 
                                     $current_date = new \DateTime($current_date);
@@ -2957,14 +2866,31 @@ class AssessmentController extends Controller
 
 
 
-                        }elseif ($fee->id == 31){
+                        }
+                        elseif ($fee->id == 31){//Perusal
                             $total_amount = $number_of_files * $item_amount;
                             $penalty = $penalty;
                             $currency = $currency;
                             $days = $days;
                             $copy_charges = $copy_charges;
-                        }else{
-                            dd('end');
+                        }
+                        elseif (in_array($fee->id, array(10,11,14,30,42,43,51))){
+                            /**
+                             * Certifying Fees (companies certificates)Certifying Fees (companies memorandum)Change Fees (companies Particulars)Name Reservation Fees
+                            Registration Fees (companies - local)Registration Fees (companies -Foreign)Search Fees- Official (companies)
+                             */
+                            $total_amount = $item_amount;
+                            $penalty = $penalty;
+                            $currency = $currency;
+                            $days = $days;
+                            $copy_charges = $copy_charges;
+                        }
+                        else{
+                            $total_amount = 0;
+                            $penalty = 0;
+                            $currency = 0;
+                            $days = 0;
+                            $copy_charges = 0;;
                         }
 
                         $checkItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id])->first();
@@ -2986,32 +2912,16 @@ class AssessmentController extends Controller
                             return response()->json(['success'=>4]);
                         }
 
-
-
-
-                        echo json_encode(array('has_form'=>$has_form,
-                            'item_name'=>$item_name,
-                            'item_amount'=>$total_amount,
-                            'penalty_amount'=>$penalty,
-                            'currency'=>$currency,
-                            'days'=>$days,
-                            'copy_charge'=>$copy_charges,
-                            'success'=>'1',
-                            'temp_payment_id'=>$temp_payment_id,
-                            'company_number'=>$company_number,
-                            'company_name'=>$company_name,
-                            'filling_date'=>$filing_date,
-                            'phone_number'=>$phone_number,
-                            'expire_days'=>$expire_days,
-                            'number_of_files'=>$number_of_files));
-
-
-
+                        return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                            'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
+                            'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
+                            'number_of_files'=>$number_of_files]);
 
                     }
 
 
-                }elseif ($account_code == 440332){//Business Names
+                }
+                elseif ($account_code == 440332){//Business Names
 
                     if ($fee->id = 2){//payment of annual maintenance fee
 

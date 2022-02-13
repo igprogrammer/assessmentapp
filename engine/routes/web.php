@@ -12,11 +12,9 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('test', function (){
-    $data = \Illuminate\Support\Facades\DB::connection('pgsql')->table('booking')->first();
-    dd($data);
-});
+
 Route::group(['prefix'=>'assessments'], function (){
+    Route::get('/calculate-fee',[\App\Http\Controllers\Assessment\FeeCalculationController::class,'calculateFee'])->name('calculate-fee');
     Route::get('/search-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'searchAssessment'])->name('search-assessment');
     Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterAssessment'])->name('filter');
     Route::get('/get-attachment/{attachment_id}',[\App\Http\Controllers\Assessment\AssessmentController::class,'getFileContent'])->name('get-attachment/{attachment_id}');

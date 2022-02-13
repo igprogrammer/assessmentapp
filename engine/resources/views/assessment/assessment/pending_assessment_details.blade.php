@@ -79,24 +79,26 @@
                             <div class="panel-heading">Item selection</div>
                             <div class="panel-body">
                                 <div class="col-md-12">
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                             {!! Form::label('title','Division') !!}
                                             {!! Form::select('division_id',[''=>'Select division']+$divisions,$division->id,['class'=>'form-control','onchange'=>'get_fee_accounts()','id'=>'division_id']) !!}
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                             {!! Form::label('title','Account') !!}
                                             {!! Form::select('fee_account_id',[''=>'Select account']+$fee_accounts,$feeAcc->id,['class'=>'form-control','id'=>'fee_account_id','onchange'=>'get_fees()']) !!}
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                             {!! Form::label('title','Fee') !!}
                                             {!! Form::select('fee_id',[''=>'Select fee']+$fees,array(),['class'=>'form-control','id'=>'fee_id','onchange'=>'get_items()']) !!}
                                         </div>
                                     </div>
+                                </div>
+                                <div class="col-md-12">
                                     <div class="col-md-3">
                                         <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                             {!! Form::label('title','Item') !!}
@@ -124,7 +126,7 @@
 
                                                 ?>
 
-                                                {!! Form::select('year',['0'=>"Select year"]+$years,2022,['class'=>'form-control','id'=>'year','selected'=>'selected']) !!}
+                                                {!! Form::select('year',[''=>'Select year']+$years,array(),['class'=>'form-control','id'=>'year']) !!}
 
 
                                             </div>

@@ -11,9 +11,8 @@
     <link href="{{ asset('/css/full-slider.css') }}" rel="stylesheet">
     <link href="{{ asset('/css/shoole.css') }}" rel="stylesheet">
     <link href="{{ asset('/css/bootstrap-grid-h.css') }}" rel="stylesheet">
+    <link href="{{asset(url('assets/css/select2.css'))}}" rel="stylesheet" type="text/css" />
 
-    <!--FOR MULTISELECT-->
-    <link rel="stylesheet" href="css/bootstrap-multiselect.css" type="text/css"/>
     <!-- Fonts -->
     <!--<link href='//fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>-->
 {!! Html::style('css/jQueryUI/jquery-ui-1.10.3.custom.css') !!}
@@ -258,11 +257,6 @@
 <script src="{{asset('/js/shoole.js')}}"></script>
 <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>-->
 
-
-
-
-<!-- jQuery 2.0.2 -->
-<script src="js/plugins/datepicker/bootstrap-datepicker.js" type="text/javascript"></script>
 <script>
     $(function(){
         $('.datepicker').datepicker({ format: 'yyyy-mm-dd'})
@@ -290,6 +284,7 @@
 <!-- Bootstrap -->
 {!! Html::script('js/bootstrap.min.js') !!}
 {!! Html::script('assets/js/bootbox.min.js') !!}
+{!! Html::script('assets/js/select2.js') !!}
 
 <!--end special date picker scripts -->
 
@@ -308,24 +303,26 @@
 <!-- script to allow multiple select -->
 @yield('multiselect')
 
-@yield('multipleselect')
-
-@yield('page_load')
-
-@yield('lavacharts')
-<script src="http://code.highcharts.com/highcharts.js"></script>
 
 <script>
 
-    $('.loading').css('display','block');
+   /* $('.loading').css('display','block');
     $('a[href]').on('click', function(event) { event.preventDefault(); });
 
     $(document).ready(function (){
         //$("[data-mask]").inputmask();
-        $('.loading')/*.css('display','none')*/.fadeOut(2000, function (){ $('a[href]').unbind("click"); });
+        $('.loading')/!*.css('display','none')*!/.fadeOut(2000, function (){ $('a[href]').unbind("click"); });
     });
+*/
 
+   $(document).ready(function() {
+       $('#item_id').select2();
+       $('#division_id').select2();
+       $('#fee_account_id').select2();
+       $('#fee_id').select2();
+   });
 
+</script>
 </script>
 
 </body>

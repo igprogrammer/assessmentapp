@@ -53,8 +53,8 @@
                 <td>{{ $payment->amount }}</td>
                 <td>{{ $payment->invoice }}</td>
                 <td>
-                <?php $user = \App\Models\User::find($payment->user_id); ?>
-                {{ $user->name }}
+                   {{ $payment->name }}
+                </td>
                 <td><a class="btn btn-warning" href="{{ url('assessments/assessment-items') }}/{{ encrypt($payment->id) }}/{{ $flag }}"><i class="glyphicon glyphicon-eye-open"></i> View</a></td>
                 <td>
                     <a onclick="print_assessment('{{ encrypt($payment->id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
