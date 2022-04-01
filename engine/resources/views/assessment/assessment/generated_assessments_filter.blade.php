@@ -1,3 +1,6 @@
+@include('assessment.assessment.assessment_list')
+
+{{--
 <table class="table table-striped table-bordered">
     <tr>
         <th>
@@ -87,3 +90,4 @@
 
 
 </table>
+--}}

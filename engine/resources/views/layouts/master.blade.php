@@ -314,7 +314,229 @@
         $('.loading')/!*.css('display','none')*!/.fadeOut(2000, function (){ $('a[href]').unbind("click"); });
     });
 */
+   $('.request-control-number').submit(function (e){
 
+
+       e.preventDefault();
+
+       $(".loading").css("display","none");
+
+
+       $.ajaxSetup({
+           headers: {
+               'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+           },
+           enctype: 'multipart/form-data'
+       });
+
+
+       var formData = new FormData(this);
+
+
+
+       let filterButton = $('#requestControlNumber');
+
+       filterButton.prop('disable',true);
+       bootbox.dialog({
+           closeButton: false,
+           message: "Are you sure you want re-generate control number for payment?",
+           title: "Confirm request Control number",
+           buttons: {
+               danger: {
+                   label: "&nbsp;&nbsp;&nbsp;&nbsp; Yes &nbsp;&nbsp;&nbsp;&nbsp;",
+                   className: "btn-danger",
+                   callback: function() {
+
+
+                       $('.loading').css('display','block');
+                       $('a[href]').on('click', function(event) { event.preventDefault(); });
+
+
+
+                       $.ajax({
+
+                           type: "post",
+                           url: "{{ url('assessments/request-control-number')}}",
+                           data: formData,
+                           cache:false,
+                           contentType: false,
+                           processData: false,
+                           dataType: 'json',
+                           success:(data)=>{
+                               $(".loading").css("display","none");
+
+                               bootbox.alert({
+                                   message: data.message,
+                                   callback: function () {
+
+                                       window.location.reload();
+
+                                   }
+                               })
+
+                           },
+                           error: function(data){
+                               $(".loading").css("display","none");
+
+                               bootbox.alert({
+                                   message: "Failed to get Control number for payment",
+                                   callback: function () {
+
+                                       window.location.reload();
+                                       $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
+                                       filterButton.prop('disabled',false);
+
+
+                                   }
+                               })
+
+                           }
+
+
+                       });
+
+
+                   }
+               },
+               main: {
+                   label: "&nbsp;&nbsp;&nbsp;&nbsp; No &nbsp;&nbsp;&nbsp;&nbsp;",
+                   className: "btn-primary",
+                   callback: function() {
+                       return true;
+                   }
+               }
+           }
+       });
+
+
+   });
+
+   $('#generate-invoice').submit(function (e){
+
+
+       e.preventDefault();
+
+       $(".loading").css("display","none");
+
+
+       $.ajaxSetup({
+           headers: {
+               'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+           },
+           enctype: 'multipart/form-data'
+       });
+
+
+       var formData = new FormData(this);
+
+
+
+       let filterButton = $('#generateInvoice');
+
+       filterButton.prop('disable',true);
+       bootbox.dialog({
+           closeButton: false,
+           message: "Are you sure you want to generate invoice and request control number?",
+           title: "Confirm invoice generation",
+           buttons: {
+               danger: {
+                   label: "&nbsp;&nbsp;&nbsp;&nbsp; Yes &nbsp;&nbsp;&nbsp;&nbsp;",
+                   className: "btn-danger",
+                   callback: function() {
+
+
+                       $('.loading').css('display','block');
+                       $('a[href]').on('click', function(event) { event.preventDefault(); });
+
+
+
+                       $.ajax({
+
+                           type: "post",
+                           url: "{{ url('assessments/save-assessment')}}",
+                           data: formData,
+                           cache:false,
+                           contentType: false,
+                           processData: false,
+                           dataType: 'json',
+                           success:(data)=>{
+                               $(".loading").css("display","none");
+
+                               if (data.success == 1){
+
+                                   bootbox.alert({
+                                       message: data.message,
+                                       callback: function () {
+                                           var base = '{{ url('assessments/continue-assessment') }}';
+                                           var url = base+'?payment_id='+data.payment_id;
+                                           window.location.href = url;
+                                       }
+                                   })
+
+
+                               }/*else if (data.success == 2){
+
+                                   bootbox.alert({
+                                       message: data.message,
+                                       callback: function () {
+                                           var base = '{{ url('assessments/new-assessment') }}';
+                                           window.location.href = base;
+                                       }
+                                   })
+
+                               }*/
+                               else{
+
+                                   bootbox.alert({
+                                       message: data.message,
+                                       callback: function () {
+                                           var base = '{{ url('assessments/new-assessment') }}';
+                                           window.location.href = base;
+                                       }
+                                   })
+
+                               }
+
+                               $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
+                               filterButton.prop('disabled',false);
+
+
+                           },
+                           error: function(data){
+                               $(".loading").css("display","none");
+
+                               bootbox.alert({
+                                   message: data.message,
+                                   callback: function () {
+
+                                       window.location.reload();
+                                       $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
+                                       filterButton.prop('disabled',false);
+
+
+                                   }
+                               })
+
+                           }
+
+
+                       });
+
+
+                   }
+               },
+               main: {
+                   label: "&nbsp;&nbsp;&nbsp;&nbsp; No &nbsp;&nbsp;&nbsp;&nbsp;",
+                   className: "btn-primary",
+                   callback: function() {
+                       return true;
+                   }
+               }
+           }
+       });
+
+
+   });
    $(document).ready(function() {
        $('#item_id').select2();
        $('#division_id').select2();

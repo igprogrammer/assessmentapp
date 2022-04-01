@@ -46,4 +46,24 @@ class User extends Authenticatable
         'email'=>'required',
         'password'=>'required'
     );
+
+    public static $add_rules = array(
+        'name'=>'required',
+        'username'=>'required',
+        'password'=>'required',
+        'role'=>'required',
+    );
+
+    public static $edit_rules = array(
+        'name'=>'required',
+        'email'=>'required',
+        'role'=>'required',
+    );
+
+    public static $update_password_rules = array(
+        'email'=>'required|exists:users',
+        'password'=>'required|confirmed',
+        'password_confirmation'=>'required'
+    );
+
 }

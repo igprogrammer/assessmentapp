@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Assessment;
 
 use App\Helpers\CurrencyNumberToWordConverter;
+use App\Http\Controllers\Billing\BillingController;
 use App\Http\Controllers\Controller;
 use App\Models\Assessment\AssessmentAttachment;
 use App\Models\Assessment\Division;
+use App\Models\Assessment\EventLog;
 use App\Models\Assessment\Fee;
 use App\Models\Assessment\FeeAccount;
 use App\Models\Assessment\FeeItem;
+use App\Models\Billing\Billing;
 use App\Models\Booking\Booking;
 use App\Models\Customer\Customer;
 use App\Models\ExchangeRate\ExchangeRate;
@@ -17,13 +20,13 @@ use App\Models\Payment\PaymentFee;
 use App\Models\Payment\TempItem;
 use App\Models\Payment\TempPayment;
 use App\Models\User;
-use Cassandra\Custom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
 class AssessmentController extends Controller
@@ -119,16 +122,25 @@ class AssessmentController extends Controller
         if(!empty($attachmentId)){
 
             $attachment = AssessmentAttachment::where('id','=',$attachmentId)->first();
+
             if (!empty($attachment)){
+                $tempPay = TempPayment::find($attachment->temp_payment_id);
+                $cust = Customer::where(['company_number'=>$tempPay->company_number])->first();
                 $payment = Payment::find($attachment->payment_id);
-                $customer = Customer::find($payment->customer_id);
+                if (!empty($payment)){
+                    $customer = Customer::find($payment->customer_id);
+                }else{
+                    $customer = $cust;
+                }
             }
+
+            $companyNumber = $customer->company_number ?? $tempPay->company_number;
 
 
 
             if(!empty($attachment)){
                 if($attachment->mime == 'application/pdf'){
-                    $file = storage_path('app/assessment_attachments/'.$customer->company_number.'/'). $attachment->file_path;
+                    $file = storage_path('app/assessment_attachments/'.$companyNumber.'/'). $attachment->file_path;
                     if (file_exists($file)) {
                         $headers = ['Content-Type' => 'application/pdf'];
                         return response()->download($file, $attachment->file_name, $headers);
@@ -136,7 +148,7 @@ class AssessmentController extends Controller
                         abort(404, 'File not found!');
                     }
                 }elseif($attachment->mime == 'application/jpg' || $attachment->mime == 'application/png' || $attachment->mime == 'application/jpeg'){//if jpg/png/jpeg
-                    $file = storage_path('app/assessment_attachments/'.$customer->company_number.'/'). $attachment->file_path;
+                    $file = storage_path('app/assessment_attachments/'.$companyNumber.'/'). $attachment->file_path;
                     if (file_exists($file)) {
                         $headers = ['Content-Type' => 'application/jpg'];
                         return response()->download($file, $attachment->file_name, $headers);
@@ -144,7 +156,7 @@ class AssessmentController extends Controller
                         abort(404, 'File not found!');
                     }
                 }elseif($attachment->mime == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'){//if word
-                    $file = storage_path('app/assessment_attachments/'.$customer->company_number.'/'). $attachment->file_path;
+                    $file = storage_path('app/assessment_attachments/'.$companyNumber.'/'). $attachment->file_path;
                     if (file_exists($file)) {
                         $headers = ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
                         return response()->download($file, $attachment->file_name, $headers);
@@ -200,10 +212,7 @@ class AssessmentController extends Controller
             }
 
             return view('assessment.assessment.new_assessment')->with('title'.'New assessment')
-                ->with('title','Print assessment and add new')
-                ->with('fee_accounts',$fee_accounts)
-                ->with('divisions',$divisions)
-                ->with('payment_id',$payment_id);
+                ->with('title','Print assessment and add new')->with(compact('fee_accounts','divisions','payment_id','payment'));
         }else{
             return \redirect()->to('new-assessment')->with('title','New assessment')->with('error-message','Failed to create and print assessment.');
         }
@@ -223,17 +232,79 @@ class AssessmentController extends Controller
     //save assessment
     public function saveAssessment(Request $request){
 
-        DB::beginTransaction();
+        //DB::beginTransaction();
         try {
             $temp_payment_id = $request->temp_payment_id;
             $item_ids = $request->item_ids;
             $total_amount = $request->total_amount;
+            $tempStatus = $request->tempStatus;
+            $company_number = $request->company_number;
 
 
             $re_assessment = $request->re_assessment;
+            $checkAttachment = AssessmentAttachment::checkAttachment($temp_payment_id);
 
-            if (empty($request->file('assessment_form_file'))){
-                return \redirect()->back()->with('error-message','Please attach assessment form');
+            if ($tempStatus == 0 || empty($checkAttachment)){
+                if (empty($request->file('assessment_form_file'))){
+                    return response()->json(['success'=>0,'message'=>'Please attach assessment form']);
+                    //return \redirect()->back()->with('error-message','Please attach assessment form');
+                }
+            }
+
+
+
+
+            /*Begin assessment attachment*/
+
+            $assessment_form_file=$request->file('assessment_form_file');
+
+            if ($tempStatus == 0 || empty($checkAttachment)){
+                if (!empty($assessment_form_file)){
+
+                    $extension = $assessment_form_file->getClientOriginalExtension();
+                    if (strtolower($extension) == 'png' || strtolower($extension) == 'jpg' || strtolower($extension) == 'jpeg' || strtolower($extension) == 'pdf'){
+
+                        // SET UPLOAD PATH
+
+                        if (!File::isDirectory(storage_path().'/'.'app/assessment_attachments'.'/'.$company_number)){
+                            File::makeDirectory(storage_path().'/'.'app/assessment_attachments'.'/'.$company_number,0777,true);
+                        }
+
+
+                        $destinationPath = storage_path().'/'.'app/assessment_attachments'.'/'.$company_number;//getClientOriginalExtension
+                        // GET THE FILE EXTENSION
+                        $extension = $assessment_form_file->getClientOriginalExtension();
+
+                        $fileName = date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
+                        // MOVE THE UPLOADED FILES TO THE DESTINATION DIRECTORY
+                        $upload_success = $assessment_form_file->move($destinationPath, $fileName);
+
+
+                        $filePath = date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
+                        $mimeType = $assessment_form_file->getClientMimeType();
+                        $fileName = $assessment_form_file->getClientOriginalName();
+                        $attachment = AssessmentAttachment::saveAttachment($temp_payment_id,$filePath,$mimeType,$fileName,$extension);
+
+
+                    }
+                }
+            }
+
+            /*End assessment attachment*/
+
+
+            if ($tempStatus == 2){
+
+                $tempPayment = TempPayment::find($temp_payment_id);
+
+                if (!empty($tempPayment)){
+                    TempPayment::updateTempStatus($temp_payment_id,$tempStatus);
+                }
+                DB::commit();
+                $message = 'Assessment has been successfully forwarded to supervisor before invoice generation';
+                return response()->json(['success'=>1,'message'=>$message]);
+                //return \redirect()->to('assessments/new-assessment')->with('title','New assessment')->with('success-message',$message);
+
             }
 
 
@@ -281,8 +352,11 @@ class AssessmentController extends Controller
                 $exchange_rate = $exchange_rate_info->exchange_rate;
             }
 
+
             if (!empty($temp_payment_id)){
+
                 $temp_payment = TempPayment::getTempPaymentInfo($temp_payment_id);
+
                 if (!empty($temp_payment)){
                     $check_payment = Payment::where('temp_payment_id','=',$temp_payment->id)->first();
                     //generate invoice
@@ -329,105 +403,34 @@ class AssessmentController extends Controller
                         $company_number = $temp_payment->company_number;
                         $check_customer = Customer::checkCustomer($company_number);
                         if (empty($check_customer)){
-                            $customer = new Customer();
-                            $customer->company_number = $temp_payment->company_number;
-                            $customer->customer_name = ucwords(strtolower($temp_payment->company_name));
-                            $customer->user_id = Auth::user()->id;
-                            $customer->save();
+                            $customer = Customer::saveCustomer($temp_payment->company_number,$temp_payment->company_name);
                             $customer_id = $customer->id;
                         }else{
                             $customer_id = $check_customer->id;
                         }
 
                         //create new entry in the payments table
-
-                        $payment = new Payment();
-                        $payment->user_id = Auth::user()->id;
-                        $payment->customer_id =$customer_id;
-                        $payment->temp_payment_id =$temp_payment->id;
-                        $payment->amount = $total_amount;
-                        $payment->cheque_amount = '';
-                        $payment->payment_type = 'Cash';
-                        $payment->cheque_amount = '';
-                        $payment->date_of_payment = date('d/m/Y',strtotime(date('Y-m-d')));
-                        $payment->month = date('m');
-                        $payment->year = date('Y');
-                        $payment->account_code = $temp_payment->account_code;
-                        $payment->pay_type = 'none';
-                        $payment->currency = $temp_payment->currency;
-                        $payment->app_print = 'no';
-                        $payment->regno = $temp_payment->company_number;
-                        $payment->invoice = $invoice;
-                        $payment->reference = $invoice;
-                        $payment->re_assessment_description = $re_assessment_description;
-                        $payment->add_date = date('Y-m-d');
-                        $payment->save();
+                        $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
+                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description);
 
                         //return payment id
                         $payment_id = $payment->id;
 
 
-                        /*Begin assessment attachment*/
-
-                        $assessment_form_file=$request->file('assessment_form_file');
-
-                        if (!empty($assessment_form_file)){
-
-                            $extension = $assessment_form_file->getClientOriginalExtension();
-                            if (strtolower($extension) == 'png' || strtolower($extension) == 'jpg' || strtolower($extension) == 'jpeg' || strtolower($extension) == 'pdf'){
-
-                                // SET UPLOAD PATH
-
-                                if (!File::isDirectory(storage_path().'/'.'app/assessment_attachments'.'/'.$company_number)){
-                                    File::makeDirectory(storage_path().'/'.'app/assessment_attachments'.'/'.$company_number,0777,true);
-                                }
-
-
-                                $destinationPath = storage_path().'/'.'app/assessment_attachments'.'/'.$company_number;//getClientOriginalExtension
-                                // GET THE FILE EXTENSION
-                                $extension = $assessment_form_file->getClientOriginalExtension();
-
-                                $fileName = date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
-                                // MOVE THE UPLOADED FILES TO THE DESTINATION DIRECTORY
-                                $upload_success = $assessment_form_file->move($destinationPath, $fileName);
-
-                                //$path = 'report_attachments/'.$fileName;
-                                $attachment = new AssessmentAttachment();
-                                $attachment->payment_id = $payment_id;
-                                //$attachment->file_path = 'assessment_attachments'.'/'.$company_number.'/'.date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
-                                $attachment->file_path = date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
-                                $attachment->mime = $assessment_form_file->getClientMimeType();
-                                $attachment->file_name = $assessment_form_file->getClientOriginalName();
-                                $attachment->extension = $extension;
-                                $attachment->save();
-
-                            }
-                        }
-
-                        /*End assessment attachment*/
+                        /**
+                         * update attachment table with payment_id
+                         */
+                        $attach = AssessmentAttachment::where(['temp_payment_id'=>$temp_payment_id])->first();
+                        $attach->payment_id = $payment_id;
+                        $attach->save();
 
                         //get items
                         $temp_items = TempItem::where('temp_payment_id','=',$temp_payment_id)->get();
                         if (!empty($temp_items)){
                             foreach ($temp_items as $temp_item){
                                 //add entries in the payments table
-                                $payment_fee = new PaymentFee();
-                                $payment_fee->user_id = Auth::user()->id;
-                                $payment_fee->payment_id = $payment_id;
-                                $payment_fee->fee_item_id = $temp_item->fee_item_id;
-                                $payment_fee->temp_payment_id = $temp_payment->id;
-                                $payment_fee->fee_amount = $temp_item->fee_amount;
-                                $payment_fee->date_of_payment = date('d/m/Y',strtotime(date('Y-m-d')));
-                                $payment_fee->account_code = $temp_payment->account_code;
-                                $payment_fee->month = date('m');
-                                $payment_fee->year = date('Y');
-                                $payment_fee->fname = $temp_item->fname;
-                                $payment_fee->fyear2 = $temp_item->fyear2;
-                                $payment_fee->fyear = $temp_item->fyear;
-                                $payment_fee->save();
-
-                                //create an array
-
+                                $payment_fee = PaymentFee::savePaymentItems($payment_id,$temp_item->fee_item_id,$temp_payment->id,$temp_item->fee_amount,
+                                    $temp_payment->account_code,$temp_item->fname,$temp_item->fyear2,$temp_item->fyear);
 
                                 //create an array for the summary
 
@@ -458,63 +461,88 @@ class AssessmentController extends Controller
 
                         //update temp payment
                         $temp_pay = TempPayment::find($temp_payment->id);
-                        $temp_pay->status = '1';
+                        $temp_pay->status = $tempStatus;
                         $temp_pay->save();
 
 
                         //create entries in obrs
-                        DB::connection('pgsql')->table('booking')->insert(array('amount' => $total_amount,
-                            'invoice' => $invoice,
-                            'currency'=>$curr,
-                            'section_id'=>$sc,
-                            'summary'=>$comma_separated,
-                            'booking_from'=>$flag,
-                            're_assessment_from'=>$sc,
-                            'reference'=>$invoice,
-                            'phone_number'=>$temp_payment->phone_number,
-                            'exchange_rate'=>$exchange_rate,
-                            'bl_exchange_rate'=>$exchange_rate,
-                            'expire_days'=>$expire_days,
-                            'expire_date'=>$expire_date));
+
+                        Booking::saveOBRSInvoice($total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$temp_payment->phone_number,$exchange_rate,$expire_days,$expire_date,'normal','National Microfinance Bank');
 
 
-                        $booking_info = DB::connection('pgsql')->table('booking')->select()->where('reference',$invoice)->first();
+                        $booking_info = Booking::getBookingData($invoice);
                         $booking_id = $booking_info->booking_id;
 
-                        $check_booking_invoice = DB::connection('pgsql')->table('brela_invoice')->select()->where('booking_id',$booking_id)->first();
+                        $check_booking_invoice = Booking::getInvoiceName($booking_id);
                         if (empty($check_booking_invoice)){
-                            DB::connection('pgsql')->table('brela_invoice')->insert(array('booking_id' => $booking_id,
-                                'name' => $temp_payment->company_name));
+                            Booking::saveBrelaInvoice($booking_id,$temp_payment->company_name);
                         }
 
-                        //Put GePG processes here
+                        //save local bill
+                        $bill = Billing::saveBill($total_amount,$curr,$company_number,$booking_id);
 
+                        //End OBRS saving
 
+                        //Start GePG processing here
+
+                        if (!empty($bill)){
+
+                            $data = BillingController::generateBill($payment->reference,$payment_id);
+                            $response = $data->getData()->result;
+                            $message = $data->getData()->message;
+
+                        }else{
+                            $response = 2;
+                            $message = "Failed to get control number";
+                        }
 
                         /*End GePG content*/
 
+                        //call function to save and update control number
+                        $booking = Booking::getBookingInfoByReference($payment->reference);
+                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$booking->invoice,$bill->billId);
+                        //DB::commit();
 
+                        $result = $data->getData()->result;
+                        $message = $data->getData()->message;
+                        $status = $data->getData()->status;
 
-
-                        DB::commit();
                         //sleep the process for 5 seconds to allow GePG processing
+                        if ($tempStatus == 2){
+                            $message = Auth::user()->name.$message." for entity number: ".$company_number;
+                        }else{
+                            $message = Auth::user()->name.$message." number for entity number: ".$company_number;
+                        }
+
+                        Log::channel('assessment')->info($message);
+                        EventLog::saveEvent(Auth::user()->email,'System access','User', Auth::user()->name,$status,'Generate invoice',
+                            $message,EventLog::getIpAddress(),EventLog::getMacAddress(),'AssessmentController','saveAssessment');
                         sleep(5);
+
+                        return response()->json(['success'=>$result,'message'=>$message,'payment_id'=>encrypt($payment_id)]);
                         return Redirect::route('continue-assessment', array('payment_id' => encrypt($payment_id)));
                         //return redirect()->back()->with('title','New assessment')->with('success-message','Assessment successfully')->with('payment_id',$payment_id);
 
                     }else{
-                        return redirect()->back()->with('title','New assessment')->with('error-message','Already accessed');
+                        $message = 'Already accessed';
+                        return response()->json(['success'=>0,'message'=>$message]);
+                        return redirect()->back()->with('title','New assessment')->with('error-message',$message);
                     }
                 }else{
-                    return redirect()->back()->with('title','New assessment')->with('error-message','No record found');
+                    $message = 'No payment record was found in temporary storage';
+                    return response()->json(['success'=>0,'message'=>$message]);
+                    return redirect()->back()->with('title','New assessment')->with('error-message',$message);
                 }
             }else{
-                return redirect()->back()->with('title','New assessment')->with('error-message','No reference found');
+                $message = 'No reference found';
+                return response()->json(['success'=>0,'message'=>$message]);
+                return redirect()->back()->with('title','New assessment')->with('error-message',$message);
             }
         }catch (\Exception $exception){
-            DB::rollBack();
+            //DB::rollBack();
             $message = "An error has occurred,please contact System administrator";
             GeneralController::exceptionHandler('Controller',$exception,'AssessmentController','saveAssessment','assessment-error');
+            return response()->json(['success'=>0,'message'=>$exception->getMessage()]);
             return redirect()->back()->with('error-message',$message);
         }
 
@@ -549,9 +577,11 @@ class AssessmentController extends Controller
                     $fees[$fee->id] = $fee->fee_name;
                 }
 
+                $attachments = AssessmentAttachment::getAssessmentTempAttachments($tempAssessmentId);
+
                 return view('assessment.assessment.pending_assessment_details')->with('title','New assessment')
                     ->with(compact('fee_accounts','divisions','payment_id','temp_items','temp_payment',
-                        'division','feeAcc','fees'));
+                        'division','feeAcc','fees','attachments'));
             }
 
         }catch (\Exception $exception){
@@ -564,7 +594,7 @@ class AssessmentController extends Controller
     public function deleteAssessment(Request $request){
         try {
             $id = $request->id;
-            $assessment = TempPayment::where(['status'=>0])->first();
+            $assessment = TempPayment::whereIn('status', array(0,2))->where(['user_id'=>Auth::user()->id])->first();
             if (!empty($assessment)){
                 $checkTempItems = TempItem::where(['temp_payment_id'=>$assessment->id])->get();
                 if (!empty($checkTempItems)){
@@ -587,6 +617,7 @@ class AssessmentController extends Controller
 
     public function pendingAssessment(){
         $tempAssessments = TempPayment::getPendingAssessments();
+
         return view('assessment.assessment.pending_assessment')->with('title','Pending assessment')->with(compact('tempAssessments'));
     }
 
@@ -1672,6 +1703,8 @@ class AssessmentController extends Controller
         $expire_days = $request->expire_days;
 
         $number_of_files = $request->number_of_files;
+        $calculationType = $request->calculationType;
+        $licenceType = $request->licenceType;
 
         //check if year is selected
 
@@ -1742,25 +1775,6 @@ class AssessmentController extends Controller
                         $form = '';
                     }
 
-
-                    /*$check_column = FeeItem::where('item_name','LIKE','%'.$flag1.'%')
-                        ->orWhere('item_name','LIKE','%'.$flag2.'%')
-                        ->orWhere('item_name','LIKE','%'.$flag3.'%')
-                        ->orWhere('item_name','LIKE','%'.$flag4.'%')
-                        ->orWhere('item_name','LIKE','%'.$flag5.'%')
-                        ->where('id','=',$item_id)->first();
-
-                    if (empty($check_column)){
-                        $type = $fee->fee_name;
-                        $form = $fee_item->item_name;
-                        $item_name = $fee_item->item_name;
-                    }else{
-                        $fee = Fee::find($fee_item->fee_id);
-                        $item_name = $fee->fee_name;
-                        $type = $fee_item->fee_name;
-                        $form = '';
-                    }*/
-
                 }else{
                     $fee = Fee::find($fee_item->fee_id);
                     $item_name = $fee->fee_name;
@@ -1789,6 +1803,8 @@ class AssessmentController extends Controller
                     $temp_payment->currency = $currency;
                     $temp_payment->phone_number = $phone_number;
                     $temp_payment->expire_days = $expire_days;
+                    $temp_payment->calculationType = $calculationType;
+                    $temp_payment->licenceType = $licenceType;
                     $temp_payment->save();
 
                     $temp_payment_id = $temp_payment->id;
@@ -2354,7 +2370,7 @@ class AssessmentController extends Controller
                                 return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                                     'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                     'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
-                                    'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files]);
+                                    'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                             }
                             else{//year differences is less than one
@@ -2485,7 +2501,7 @@ class AssessmentController extends Controller
                                return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                                    'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                    'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
-                                   'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files]);
+                                   'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                             }
 
@@ -2500,7 +2516,7 @@ class AssessmentController extends Controller
                             return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                                 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                 'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
-                                'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files]);
+                                'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
 
                         }
@@ -2915,7 +2931,7 @@ class AssessmentController extends Controller
                         return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                             'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                             'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
-                            'number_of_files'=>$number_of_files]);
+                            'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                     }
 
@@ -2941,85 +2957,323 @@ class AssessmentController extends Controller
                             $copy_charges = $copy_charges;
 
                         }
-                    }elseif ($fee->id == 13){//change fees
-                        $total_amount = $fee_item->item_amount;
+                    }
+                    elseif (in_array($fee->id, array(9,13,41,49,60))){
+                        $total_amount = $item_amount;
                         $penalty = $penalty;
                         $currency = $currency;
                         $days = $days;
                         $copy_charges = $copy_charges;
-                    }elseif ($fee->id == 66){
+                    }
+                    elseif ($fee->id == 66){
                         $total_amount = $number_of_files * $item_amount;
                         $penalty = $penalty;
                         $currency = $currency;
                         $days = $days;
                         $copy_charges = $copy_charges;
-                    }elseif ($fee->id == 41){
-                        $total_amount = $item_amount;
-                        $penalty = $penalty;
-                        $currency = $currency;
-                        $days = $days;
-                        $copy_charges = $copy_charges;
                     }
 
-                    elseif ($account_code == 440341){
-                        $total_amount = $item_amount;
-                        $penalty = $penalty;
-                        $currency = $currency;
-                        $days = $days;
-                        $copy_charges = $copy_charges;
+                }
+                elseif ($account_code == 440341){
+                    $total_amount = $item_amount;
+                    $penalty = $penalty;
+                    $currency = $currency;
+                    $days = $days;
+                    $copy_charges = $copy_charges;
+                }
+                elseif ($account_code == 440342){
 
 
-                        //return response as json
-                        echo json_encode(array('has_form'=>$has_form,
-                            'item_name'=>$item_name,
-                            'item_amount'=>$total_amount,
-                            'penalty_amount'=>$penalty,
-                            'currency'=>$currency,
-                            'days'=>$days,
-                            'copy_charge'=>$copy_charges,
-                            'success'=>'1',
-                            'number_of_files'=>$number_of_files));
+                    if ($fee->id == 7){//business licence
 
-                    }elseif ($account_code == 440342){
+                        $ExpireDate = $filing_date;
+                        $days = 21;
 
-                        if ($fee->id == 8){
-                            $current_date = new \DateTime(date('Y-m-d'));
-                            $filing_date = new \DateTime(\date('Y-m-d',strtotime($filing_date . '+ ' . $days . ' days')));
-                            $diff = $current_date->diff($filing_date);
-                            $number_of_years = $diff->y;
-                            $months = $diff->m;
+                        $Expire_year = date('Y',strtotime($ExpireDate));
+                        $Expire_month = date('m',strtotime($ExpireDate));
+                        $Expire_day = date('d',strtotime($ExpireDate));
+                        $current_month = date('m', strtotime($current_date));
+                        $current_year = date('Y', strtotime($current_date));
 
-                            $penalty_value = 0;
-                            $total_amount = 0;
-                            if ($months >= 1){
-                                for ($i = 0; $i < $months; $i++){
-                                    $penalty_value = $penalty + ($i * 0.02);
-                                    //$total_amount = $total_amount + ($item_amount * $penalty_value);
-                                    $total_amount = $item_amount * $penalty_value;
-                                    //echo $total_amount;
-                                    //echo "<br>";
+                        $ExDate = new \DateTime($ExpireDate);
+                        $curDate = new \DateTime($current_date);
+
+                        $diff = $curDate->diff($ExDate);
+                        $year_difference= $diff->y;
+                        $ydiff = $diff->y;
+                        $yr_diff = $diff->y;
+                        $month_difference=$diff->m;
+                        $days_difference = $diff->d;
+
+                        $currentPayableLicenceAmount = 0;
+                        $penalty_amount = 0;
+
+                        if ($year_difference >= 1){
+
+
+                            $fee_amount = 0;
+                            //check if to grant grace period to the current year
+                            if ((int)$Expire_month <= (int)$current_month){//if expire date is less than or equal to the current month
+
+                                for ($year_difference; ((int)$current_year - (int)$year_difference) <= (int)$current_year; $year_difference--){
+
+                                    if ((int)$current_year == ((int)$current_year - (int)$year_difference)) {//current year
+                                        //check if to add grace period
+                                        $calculation_year = ($current_year - $year_difference);
+                                        //allow grace period
+                                        $ExpireD = date("Y-m-d", strtotime($ExpireDate . '+ ' . $days . ' days'));
+                                        $ExpiryMonth = date('m',strtotime($ExpireD));
+                                        $ExpiryDay = \date('d',strtotime($ExpireD));
+
+                                        $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
+                                        $calculation_date = date('Y-m-d',strtotime($calculation_date));
+                                        $calc_date = $calculation_date;
+
+
+                                        $today_date = date('Y-m-d');
+
+                                        if ($calculation_date < $today_date){
+
+
+                                            $calculation_date = new \DateTime($calculation_date);
+                                            $diff = $calculation_date->diff($curDate);
+                                            $difference_in_years = $diff->y;
+                                            $difference_months = $diff->m;
+                                            $difference_days = $diff->d;
+
+                                            if ($difference_days >= 30){
+
+                                                $number_of_days = (int)fmod($difference_days,30);
+                                                if ($number_of_days > 0){
+                                                    //$number_of_months = 1;//for cm
+                                                    $number_of_months = 0;
+                                                    $months = $difference_months + $number_of_months;
+                                                }elseif ($number_of_days == 0){
+                                                    if ($difference_months > 0){
+                                                        $months = $difference_months;
+                                                    }else{
+                                                        $months = $difference_days/30;
+                                                    }
+
+                                                }else{
+                                                    $months = $difference_months;
+                                                }
+
+                                            }else{
+
+                                                if ($difference_months > 0){
+                                                    $months = $difference_months;
+                                                }else{
+                                                    $months = 0;
+                                                }
+                                            }
+                                        }else{
+                                            $months = 0;
+                                        }
+
+
+                                        //call function to get penalty percentage by passing number of months elapsed
+                                        $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
+
+
+                                    }
+                                    else{//not current year
+
+                                        $calculation_year = ($current_year - $year_difference);
+                                        //allow grace period
+                                        $ExpireD = date("Y-m-d", strtotime($ExpireDate . '+ ' . $days . ' days'));
+                                        $ExpiryMonth = date('m',strtotime($ExpireD));
+                                        $ExpiryDay = \date('d',strtotime($ExpireD));
+
+                                        $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
+                                        $calculation_date = date('Y-m-d',strtotime($calculation_date));
+
+                                        $today_date = date('Y-m-d');
+                                        $months = 0;
+                                        if ($calculation_date < $today_date){
+
+
+                                            $calculation_date = new \DateTime($calculation_date);
+                                            $diff = $calculation_date->diff($curDate);
+                                            $difference_in_years = $diff->y;
+                                            $difference_months = $diff->m;
+                                            $difference_days = $diff->d;
+
+
+
+                                            if ($difference_in_years > 0){
+                                                $months = $difference_in_years * 12;
+                                            }
+
+                                            if ($difference_days >= 30){
+
+                                                $number_of_days = (int)fmod($difference_days,30);
+                                                if ($number_of_days > 0){
+                                                    //$number_of_months = 1;//for cm
+                                                    $number_of_months = 0;
+                                                    $months = $months + ($difference_months + $number_of_months);
+                                                }elseif ($number_of_days == 0){
+                                                    if ($difference_months > 0){
+                                                        $months = $months + $difference_months;
+                                                    }else{
+                                                        $months = $months + $difference_days/30;
+                                                    }
+
+                                                }else{
+                                                    $months = $months + $difference_months;
+                                                }
+
+                                            }
+                                            else{
+
+                                                if ($difference_months > 0){
+                                                    $months = $months + $difference_months;
+                                                }else{
+                                                    $months = $months + 0;
+                                                }
+                                            }
+
+
+                                        }
+
+                                        $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
+
+                                    }
+
+
+
+                                    if ($calculationType == 1){//local
+
+                                        if ($licenceType == 1){
+
+                                            $penalty = $fee_item->principalTzsFee * $penaltyPercentage;
+                                            $amount = $fee_item->principalTzsFee + $penalty;
+
+                                        }else{
+                                            $penalty = $fee_item->branchTzsFee * $penaltyPercentage;
+                                            $amount = $fee_item->branchTzsFee + $penalty;
+                                        }
+
+                                    }else{//foreign
+
+                                        if ($licenceType == 1){
+
+                                            $penalty = $fee_item->principalUsdFee * $penaltyPercentage;
+                                            $amount = $fee_item->principalUsdFee + $penalty;
+
+                                        }else{
+
+                                            $penalty = $fee_item->branchUsdFee * $penaltyPercentage;
+                                            $amount = $fee_item->branchUsdFee + $penalty;
+
+                                        }
+
+                                    }
+
+                                    $currentPayableLicenceAmount = $currentPayableLicenceAmount + $amount;
+                                    $penalty_amount = $penalty_amount + $penalty;
+
+
                                 }
-                            }else{
-                                $total_amount = $item_amount;
-                                $penalty = $penalty;
-                                $currency = $currency;
-                                $days = $days;
-                                $copy_charges = $copy_charges;
                             }
                         }
-                        elseif ($fee->id == 7){
-                            $total_amount = $item_amount;
-                            $penalty = $penalty;
-                            $currency = $currency;
-                            $days = $days;
-                            $copy_charges = $copy_charges;
-                        }else{
+                        else{
+
+                            $months = 0;
+
+                            if ($year_difference > 0){
+                                $months = $year_difference * 12;
+                            }
+
+                            if ($days_difference >= 30){
+
+                                $number_of_days = (int)fmod($days_difference,30);
+                                if ($number_of_days > 0){
+                                    //$number_of_months = 1;//for cm
+                                    $number_of_months = 0;
+                                    $months = $months + ($month_difference + $number_of_months);
+                                }elseif ($number_of_days == 0){
+                                    if ($month_difference > 0){
+                                        $months = $months + $month_difference;
+                                    }else{
+                                        $months = $months + $days_difference/30;
+                                    }
+
+                                }else{
+                                    $months = $months + $days_difference;
+                                }
+
+                            }
+                            else{
+
+                                if ($month_difference > 0){
+                                    $months = $months + $month_difference;
+                                }else{
+                                    $months = $months;
+                                }
+                            }
+
+                            $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
+
+                            if ($calculationType == 1){//local
+
+                                if ($licenceType == 1){
+
+                                    $penalty = $fee_item->principalTzsFee * $penaltyPercentage;
+                                    $amount = $fee_item->principalTzsFee + $penalty;
+
+                                }else{
+                                    $penalty = $fee_item->branchTzsFee * $penaltyPercentage;
+                                    $amount = $fee_item->branchTzsFee + $penalty;
+                                }
+
+                            }else{//foreign
+
+                                if ($licenceType == 1){
+
+                                    $penalty = $fee_item->principalUsdFee * $penaltyPercentage;
+                                    $amount = $fee_item->principalUsdFee + $penalty;
+
+                                }else{
+
+                                    $penalty = $fee_item->branchUsdFee * $penaltyPercentage;
+                                    $amount = $fee_item->branchUsdFee + $penalty;
+
+                                }
+
+                            }
+
+                            $currentPayableLicenceAmount = $currentPayableLicenceAmount + $amount;
+                            $penalty_amount = $penalty_amount + $penalty;
+
+
 
                         }
 
+
+
                     }
 
-                    //save entry
+                    $total_amount = $currentPayableLicenceAmount;
+                    $penalty = $penalty_amount;
+
+                    if ($calculationType == 1){
+                        $currency = 'TSHs';
+                    }else{
+                        $currency = 'US $';
+                    }
+
+
+
+                }
+                else{//something else
+
+                }
+
+
+                //save entry
+                $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id])->first();
+                if (empty($checkTempItem)){
                     $temp_item = new TempItem();
                     $temp_item->user_id = Auth::user()->id;
                     $temp_item->fee_item_id = $item_id;
@@ -3034,27 +3288,17 @@ class AssessmentController extends Controller
                     $temp_item->fyear = $fyear;
                     $temp_item->save();
 
-                    //return response as json
-                    echo json_encode(array('has_form'=>$has_form,
-                        'item_name'=>$item_name,
-                        'item_amount'=>$total_amount,
-                        'penalty_amount'=>$penalty,
-                        'currency'=>$currency,
-                        'days'=>$days,
-                        'copy_charge'=>$copy_charges,
-                        'success'=>'1',
-                        'temp_payment_id'=>$temp_payment_id,
-                        'company_number'=>$company_number,
-                        'company_name'=>$company_name,
-                        'filling_date'=>$filing_date,
-                        'phone_number'=>$phone_number,
-                        'expire_days'=>$expire_days,
-                        'number_of_files'=>$number_of_files));
 
-
-                }else{//something else
-
+                }else{
+                    return response()->json(['success'=>4]);
                 }
+
+
+                //return response as json
+                return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty, 'currency'=>$currency,
+                    'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id, 'company_number'=>$company_number,
+                    'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
+                    'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
 
             }else{
@@ -3064,7 +3308,7 @@ class AssessmentController extends Controller
 
         }else{
             //rhe item ID is not available,no reference found
-            echo json_encode(array('success'=>'2'));
+            return response()->json(['success'=>2]);
         }
 
 

@@ -24,11 +24,13 @@ class FeeCalculationController extends Controller
             $fee_id = $request->fee_id;
             $number_of_files = $request->number_of_files;
             $current_date = date('Y-m-d');
+            $calculationType = $request->calculationType;
+            $licenceType = $request->licenceType;
 
             if (!empty($number_of_files || $number_of_files != null)){
                 $number_of_files = $number_of_files;
             }else{
-                $number_of_files = '1';
+                $number_of_files = 1;
             }
 
             $item = FeeItem::find($item_id);
@@ -338,7 +340,7 @@ class FeeCalculationController extends Controller
 
                                     return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
                                         'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1',
-                                        'number_of_files'=>$number_of_files]);
+                                        'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
 
                                 }
@@ -422,7 +424,7 @@ class FeeCalculationController extends Controller
 
                                     return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
                                         'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1',
-                                        'number_of_files'=>$number_of_files]);
+                                        'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                                 }
 
@@ -435,7 +437,8 @@ class FeeCalculationController extends Controller
                                 $copy_charges = $copy_charges;
                                 return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
                                     'penalty_amount'=>$penalty, 'currency'=>$currency,
-                                    'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files]);
+                                    'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files,
+                                    'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
                             }
 
                         }
@@ -534,7 +537,7 @@ class FeeCalculationController extends Controller
                                                     }
 
 
-                                                    if ($difference_days > 30){
+                                                    if ($difference_days >= 30){
 
                                                         $number_of_days = (int)fmod($difference_days,30);
                                                         if ($number_of_days > 0){
@@ -741,8 +744,7 @@ class FeeCalculationController extends Controller
                                     //create response
                                     return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
                                         'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges,
-                                        'success'=>'1',
-                                        'number_of_files'=>$number_of_files]);
+                                        'success'=>'1', 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                                 }
 
@@ -766,8 +768,7 @@ class FeeCalculationController extends Controller
 
                             return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,
                                 'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges,
-                                'success'=>'1',
-                                'number_of_files'=>$number_of_files]);
+                                'success'=>'1', 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                         }
 
@@ -820,7 +821,8 @@ class FeeCalculationController extends Controller
 
                         //return response as json
                         return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
-                            'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files]);
+                            'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1',
+                            'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                     }
                     elseif ($account_code == 440341){
@@ -833,7 +835,7 @@ class FeeCalculationController extends Controller
 
                         //return response as json
                         return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount,'penalty_amount'=>$penalty, 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges,
-                            'success'=>'1', 'number_of_files'=>$number_of_files]);
+                            'success'=>'1', 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                     }
                     elseif ($account_code == 440342){
@@ -858,9 +860,12 @@ class FeeCalculationController extends Controller
                             $month_difference=$diff->m;
                             $days_difference = $diff->d;
 
+                            $currentPayableLicenceAmount = 0;
+                            $penalty_amount = 0;
+
                             if ($year_difference >= 1){
 
-                                $currentPayableLicenceAmount = 0;
+
                                 $fee_amount = 0;
                                 //check if to grant grace period to the current year
                                 if ((int)$Expire_month <= (int)$current_month){//if expire date is less than or equal to the current month
@@ -878,9 +883,6 @@ class FeeCalculationController extends Controller
                                             $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
                                             $calculation_date = date('Y-m-d',strtotime($calculation_date));
                                             $calc_date = $calculation_date;
-
-                                            //echo $calculation_date;
-                                            //echo "<br>";
 
 
                                             $today_date = date('Y-m-d');
@@ -926,7 +928,7 @@ class FeeCalculationController extends Controller
 
 
                                             //call function to get penalty percentage by passing number of months elapsed
-                                            $penaltyPercentage = self::getPenaltyPercentage($months);
+                                            $penaltyPercentage =GeneralController::getPenaltyPercentage($months);
 
 
                                         }
@@ -989,10 +991,44 @@ class FeeCalculationController extends Controller
 
                                             }
 
-                                            $penaltyPercentage = self::getPenaltyPercentage($months);
-
+                                            $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
 
                                         }
+
+
+
+                                        if ($calculationType == 1){//local
+
+                                            if ($licenceType == 1){
+
+                                                $penalty = $fee_item->principalTzsFee * $penaltyPercentage;
+                                                $amount = $fee_item->principalTzsFee + $penalty;
+
+                                            }else{
+                                                $penalty = $fee_item->branchTzsFee * $penaltyPercentage;
+                                                $amount = $fee_item->branchTzsFee + $penalty;
+                                            }
+
+                                        }else{//foreign
+
+                                            if ($licenceType == 1){
+
+                                                $penalty = $fee_item->principalUsdFee * $penaltyPercentage;
+                                                $amount = $fee_item->principalUsdFee + $penalty;
+
+                                            }else{
+
+                                                $penalty = $fee_item->branchUsdFee * $penaltyPercentage;
+                                                $amount = $fee_item->branchUsdFee + $penalty;
+
+                                            }
+
+                                        }
+
+                                       $currentPayableLicenceAmount = $currentPayableLicenceAmount + $amount;
+                                       $penalty_amount = $penalty_amount + $penalty;
+
+
                                     }
                                 }
                             }
@@ -1032,7 +1068,40 @@ class FeeCalculationController extends Controller
                                     }
                                 }
 
-                                $penaltyPercentage = self::getPenaltyPercentage($months);
+                                $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
+
+                                if ($calculationType == 1){//local
+
+                                    if ($licenceType == 1){
+
+                                        $penalty = $fee_item->principalTzsFee * $penaltyPercentage;
+                                        $amount = $fee_item->principalTzsFee + $penalty;
+
+                                    }else{
+                                        $penalty = $fee_item->branchTzsFee * $penaltyPercentage;
+                                        $amount = $fee_item->branchTzsFee + $penalty;
+                                    }
+
+                                }else{//foreign
+
+                                    if ($licenceType == 1){
+
+                                        $penalty = $fee_item->principalUsdFee * $penaltyPercentage;
+                                        $amount = $fee_item->principalUsdFee + $penalty;
+
+                                    }else{
+
+                                        $penalty = $fee_item->branchUsdFee * $penaltyPercentage;
+                                        $amount = $fee_item->branchUsdFee + $penalty;
+
+                                    }
+
+                                }
+
+                                $currentPayableLicenceAmount = $currentPayableLicenceAmount + $amount;
+                                $penalty_amount = $penalty_amount + $penalty;
+
+
 
                             }
 
@@ -1040,12 +1109,20 @@ class FeeCalculationController extends Controller
 
                         }
 
-                        dd($fee_item);
+                        $total_amount = $currentPayableLicenceAmount;
+                        $penalty = $penalty_amount;
+
+                        if ($calculationType == 1){
+                            $currency = 'TSHs';
+                        }else{
+                            $currency = 'US $';
+                        }
 
 
                         //return response as json
                        return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
-                           'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files]);
+                           'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1',
+                           'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                     }
                     else{
@@ -1069,56 +1146,6 @@ class FeeCalculationController extends Controller
     }
 
 
-    //get penalty percentage
-    public static function getPenaltyPercentage($months){
-        $currentYearPenaltyMonths = array();
-        if ($months > 0){
-            for ($i=0;$months>$i;$i++){
-                $currentYearPenaltyMonths[] = ($i + 1);
-            }
-        }
 
-        //Get PENALTY PERCENTAGE
-        $counter = 0;
-        $penaltyPercentage = 0;
-        if (!empty($currentYearPenaltyMonths)){
-            foreach ($currentYearPenaltyMonths as $currentYearPenaltyMonth){
-
-                if (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 1)){
-                    $penaltyPercentage = 0.25;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 2)){
-                    $penaltyPercentage = 0.27;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 3)){
-                    $penaltyPercentage = 0.29;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 4)){
-                    $penaltyPercentage = 0.31;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 5)){
-                    $penaltyPercentage = 0.33;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 6)){
-                    $penaltyPercentage = 0.35;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 7)){
-                    $penaltyPercentage = 0.37;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 8)){
-                    $penaltyPercentage = 0.39;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 9)){
-                    $penaltyPercentage = 0.41;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 10)){
-                    $penaltyPercentage = 0.43;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 11)){
-                    $penaltyPercentage = 0.45;
-                }elseif (!empty($currentYearPenaltyMonths[$counter] && $currentYearPenaltyMonths[$counter] == 12) || $currentYearPenaltyMonths[$counter] > 12){
-                    $penaltyPercentage = 0.47;
-                }else{
-                    $penaltyPercentage = 0;
-                }
-
-                $counter++;
-            }
-        }
-
-        return $penaltyPercentage;
-
-
-    }
 
 }

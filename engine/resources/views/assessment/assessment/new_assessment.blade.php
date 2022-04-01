@@ -6,15 +6,15 @@
 
     @if($payment_id != 0)
 
-    <div class="alert alert-success alert-dismissable">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        <a onclick="print_assessment('{{ encrypt($payment_id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
-        <a onclick="print_assessment('{{ encrypt($payment_id) }}','nmb')" class="btn btn-info"><i class="glyphicon glyphicon-print"></i> NMB transfer</a>
-        <a onclick="print_assessment('{{ encrypt($payment_id) }}','crdb')" class="btn btn-warning"><i class="glyphicon glyphicon-print"></i> CRDB transfer</a>
-        <a onclick="print_assessment('{{ encrypt($payment_id) }}','nbc')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> NBC transfer</a>
-
-
-    </div>
+        @if((int)$payment->invoice >= 991350000000)
+                <div class="alert alert-success alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
+                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','nmb')" class="btn btn-info"><i class="glyphicon glyphicon-print"></i> NMB transfer</a>
+                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','crdb')" class="btn btn-warning"><i class="glyphicon glyphicon-print"></i> CRDB transfer</a>
+                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','nbc')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> NBC transfer</a>
+                </div>
+        @endif
 
     @endif
 
@@ -25,7 +25,6 @@
         <form id="generate-invoice" class="generate-invoice"  action="javascript:void(0)" accept-charset="utf-8" enctype="multipart/form-data">
             @csrf
 
-        <div class="col-md-12">
             <div class="panel panel-primary">
                 <!-- Default panel contents -->
                 <div class="panel-heading">New assessment details</div>
@@ -74,7 +73,7 @@
                         </div>
                     </div>
 
-                   @include('assessment.assessment.item_selection')
+                    @include('assessment.assessment.item_selection')
 
                     <div id="selected_items">
 
@@ -86,7 +85,6 @@
 
                 </div>
             </div>
-        </div>
 
 
 
@@ -105,7 +103,17 @@
                 <div class="col-md-12">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <input type="submit" name="submit" value="Generate invoice" class="btn btn-success" id="generateInvoice">
+                            <?php $config = \App\Http\Controllers\Assessment\GeneralController::invoiceGeneration(); ?>
+                            @if(!empty($config))
+                                @if($config->invoiceGeneration == 0)
+                                    {!! Form::hidden('tempStatus',1) !!}
+                                    {!! Form::submit('Generate invoice',['class'=>'btn btn-success','id'=>'generateInvoice']) !!}
+                                @else
+                                    {!! Form::hidden('tempStatus',2) !!}
+                                    {!! Form::submit('Forward invoice',['class'=>'btn btn-primary','id'=>'generateInvoice']) !!}
+                                @endif
+                            @endif
+
                         </div>
                     </div>
                 </div>
@@ -139,6 +147,8 @@
 
             var phone_number = document.getElementById('phone_number').value;
             var expire_days = document.getElementById('expire_days').value;
+            var calculationType = document.getElementById('calculationType').value;
+            var licenceType = document.getElementById('licenceType').value;
 
             if (document.getElementById('item_name').value == null || document.getElementById('item_name').value == ''){
                 bootbox.dialog({
@@ -156,7 +166,8 @@
                         }
                     }
                 });
-            }else if (document.getElementById('company_number').value == null || document.getElementById('company_number').value == ''){
+            }
+            else if (document.getElementById('company_number').value == null || document.getElementById('company_number').value == ''){
                 bootbox.dialog({
                     closeButton: false,
                     message: "&nbsp;&nbsp;&nbsp;Please enter company number...",
@@ -172,7 +183,8 @@
                         }
                     }
                 });
-            }else if (document.getElementById('company_name').value == null || document.getElementById('company_name').value == ''){
+            }
+            else if (document.getElementById('company_name').value == null || document.getElementById('company_name').value == ''){
                 bootbox.dialog({
                     closeButton: false,
                     message: "&nbsp;&nbsp;&nbsp;Please enter company name...",
@@ -188,7 +200,8 @@
                         }
                     }
                 });
-            }else if (document.getElementById('filing_date').value == null || document.getElementById('filing_date').value == ''){
+            }
+            else if (document.getElementById('filing_date').value == null || document.getElementById('filing_date').value == ''){
                 bootbox.dialog({
                     closeButton: false,
                     message: "&nbsp;&nbsp;&nbsp;Please enter start filing year...",
@@ -220,7 +233,8 @@
                         }
                     }
                 });
-            }*/else if (document.getElementById('phone_number').value == null || document.getElementById('phone_number').value == ''){
+            }*/
+            else if (document.getElementById('phone_number').value == null || document.getElementById('phone_number').value == ''){
                 bootbox.dialog({
                     closeButton: false,
                     message: "&nbsp;&nbsp;&nbsp;Please enter phone number...",
@@ -236,7 +250,8 @@
                         }
                     }
                 });
-            }else if (document.getElementById('expire_days').value == null || document.getElementById('expire_days').value == ''){
+            }
+            else if (document.getElementById('expire_days').value == null || document.getElementById('expire_days').value == ''){
                 bootbox.dialog({
                     closeButton: false,
                     message: "&nbsp;&nbsp;&nbsp;Please enter expire days...",
@@ -252,7 +267,8 @@
                         }
                     }
                 });
-            }else{
+            }
+            else{
 
 
                 if(window.XMLHttpRequest) {
@@ -273,6 +289,8 @@
                             var phone_number = response.phone_number;
                             var expire_days = response.expire_days;
                             var number_of_files = response.number_of_files;
+                            var calculationType = response.calculationType;
+                            var licenceType = response.licenceType;
                             bootbox.dialog({
                                 closeButton: false,
                                 message: "&nbsp;&nbsp;&nbsp;The fee item is successfully added to this assessment,click Okay to continue...",
@@ -288,7 +306,9 @@
                                             document.getElementById('filing_date').value = filing_date;
                                             document.getElementById('phone_number').value = phone_number;
                                             document.getElementById('expire_days').value = expire_days;
-                                            document.getElementById('expire_days').value = number_of_files;
+                                            document.getElementById('number_of_files').value = number_of_files;
+                                            document.getElementById('calculationType').value = calculationType;
+                                            document.getElementById('licenceType').value = licenceType;
                                             //document.getElementById('temp_payment_id').value = filing_date;
 
 
@@ -343,6 +363,8 @@
                                             var phone_number = response.phone_number;
                                             var expire_days = response.expire_days;
                                             var number_of_files = response.number_of_files;
+                                            var calculationType = response.calculationType;
+                                            var licenceType = response.licenceType;
 
 
                                             document.getElementById('company_number').value = company_number;
@@ -351,6 +373,8 @@
                                             document.getElementById('phone_number').value = phone_number;
                                             document.getElementById('expire_days').value = expire_days;
                                             document.getElementById('number_of_files').value = number_of_files;
+                                            document.getElementById('calculationType').value = calculationType;
+                                            document.getElementById('licenceType').value = licenceType;
                                             //document.getElementById('temp_payment_id').value = filing_date;
 
 
@@ -425,7 +449,7 @@
                         }
                     }
                 }; //specify name of function that will handle server response........
-                myObject.open('GET','{{ URL::route("add-assessment-fee") }}?number_of_files='+number_of_files+'&expire_days='+expire_days+'&phone_number='+phone_number+'&charge_days='+charge_days+'&company_number='+company_number+'&company_name='+company_name+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id+'&year='+year+'&item_name='+item_name+'&currency='+currency+'&item_amount='+item_amount+'&penalty_amount='+penalty_amount,true);
+                myObject.open('GET','{{ URL::route("add-assessment-fee") }}?licenceType='+licenceType+'&calculationType='+calculationType+'&number_of_files='+number_of_files+'&expire_days='+expire_days+'&phone_number='+phone_number+'&charge_days='+charge_days+'&company_number='+company_number+'&company_name='+company_name+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id+'&year='+year+'&item_name='+item_name+'&currency='+currency+'&item_amount='+item_amount+'&penalty_amount='+penalty_amount,true);
                 myObject.send();
             }
 
@@ -503,7 +527,11 @@
             if($('#calculationType').val() == ''){
                 bootbox.alert('Please select calculation type');
                 return false;
+            }else {
+                var calculationType = $('#calculationType').val();
             }
+
+            var licenceType = document.getElementById('licenceType').value;
 
             if (item_id != ''){
 
@@ -540,7 +568,8 @@
                                 document.getElementById('number_of_files').value = response.number_of_files;
                             }
 
-                        }else{
+                        }
+                        else{
 
                             if (response.success == 5){
 
@@ -561,7 +590,8 @@
                                 });
 
 
-                            }else if (response.success == 10){
+                            }
+                            else if (response.success == 10){
 
                                 bootbox.dialog({
                                     closeButton: false,
@@ -594,7 +624,7 @@
 
                     }
                 }; //specify name of function that will handle server response........
-                myObject.open('GET','{{ url("assessments/calculate-fee") }}?number_of_files='+number_of_files+'&year='+year+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id,true);
+                myObject.open('GET','{{ url("assessments/calculate-fee") }}?licenceType='+licenceType+'&calculationType='+calculationType+'&number_of_files='+number_of_files+'&year='+year+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id,true);
                 myObject.send();
 
             }else{

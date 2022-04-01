@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Billing\BillingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,8 +13,8 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
 Route::group(['prefix'=>'assessments'], function (){
+    Route::post('request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber']);
     Route::get('/calculate-fee',[\App\Http\Controllers\Assessment\FeeCalculationController::class,'calculateFee'])->name('calculate-fee');
     Route::get('/search-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'searchAssessment'])->name('search-assessment');
     Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterAssessment'])->name('filter');
@@ -67,6 +68,11 @@ Route::group(['prefix'=>'fees'], function (){
     Route::get('/list',[\App\Http\Controllers\Assessment\FeeController::class,'fees'])->name('list');
 });
 
+Route::get('change-password/{employeeId}',[\App\Http\Controllers\Assessment\UserController::class,'changePassword']);
+Route::post('update-user',[\App\Http\Controllers\Assessment\UserController::class,'updateUser']);
+Route::get('user/{id}/edit',[\App\Http\Controllers\Assessment\UserController::class,'show'])->name('user/{id}/edit');
+Route::post('save-user',[\App\Http\Controllers\Assessment\UserController::class,'saveUser']);
+Route::get('register', [\App\Http\Controllers\Assessment\UserController::class,'register'])->name('register');
 Route::get('enable-user',[\App\Http\Controllers\Assessment\UserController::class,'enableUser'])->name('enable-user');
 Route::get('search-user',[\App\Http\Controllers\Assessment\UserController::class,'searchUser'])->name('search-user');
 Route::get('disable-user',[\App\Http\Controllers\Assessment\UserController::class,'removeUser'])->name('disable-user');

@@ -389,7 +389,7 @@ class FeeController extends Controller
     }
 
     public function feeItems(){
-        $fee_items = FeeItem::all();
+        $fee_items = FeeItem::paginate(100);
         return view('assessment.fees.fee_items')->with('title','Fee items')->with(compact('fee_items'));
     }
 

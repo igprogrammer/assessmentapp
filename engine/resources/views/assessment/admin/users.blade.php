@@ -1,22 +1,6 @@
 @extends('layouts.master')
 @section('content')
 
-    <table class="table" style="width: 50%">
-        <tr>
-            <td>
-                <b>
-                    Search user
-                </b>
-            </td>
-            <td>
-                <input type="text" class="form-control" name="name" onkeyup="search_user()" id="name" placeholder="Search user">
-            </td>
-            <td>
-                <a href="{{ url('register') }}" class="btn btn-primary"> <i class="glyphicon glyphicon-plus-sign"></i> Add user</a>
-            </td>
-        </tr>
-    </table>
-
     <div style="font-size:12px;border-bottom:none;padding-top:10px; padding-bottom:2px;background-color: white;margin-top: 10px;margin-left:3px;margin-right: 3px;margin-bottom: 0px" class="fbbluebox" id="users">
 
         @if(Session::has('success-message'))
@@ -26,6 +10,22 @@
                 {!! Session::get('success-message') !!}
             </div>
         @endif
+
+            <table class="table" style="width: 100%">
+                <tr>
+                    <td>
+                        <b>
+                            Search user
+                        </b>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" name="name" onkeyup="search_user()" id="name" placeholder="Search user">
+                    </td>
+                    <td>
+                        <a href="{{ url('register') }}" class="btn btn-primary"> <i class="glyphicon glyphicon-plus-sign"></i> Add user</a>
+                    </td>
+                </tr>
+            </table>
 
 
         <table class="table">
@@ -48,7 +48,7 @@
                 <th>
                     Edit
                 </th>
-                <th>
+                <th colspan="2">
                     Delete
                 </th>
             </tr>
@@ -85,6 +85,9 @@
                 </td>
                 <td>
                     <a href='user/{{ $user->id }}/edit' class="btn btn-success"><i class='glyphicon glyphicon-edit'>View</i></a>
+                </td>
+                <td>
+                    <a href="{{ url('change-password') }}/<?php echo \Illuminate\Support\Facades\Crypt::encrypt($user->id)?>" class="btn btn-primary"> <i class="glyphicon glyphicon-plus-sign"></i> Change user password</a>
                 </td>
                 <td>
                     @if($user->account_status == 1)

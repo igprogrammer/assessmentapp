@@ -1,4 +1,4 @@
-@extends('...layouts.admin')
+@extends('layouts.master')
 
 @section('content')
 
@@ -32,20 +32,20 @@
 
 
 
-    {!! Form::open(['url'=>'register','method'=>'post','class'=>'form'])!!}
+    {!! Form::open(['url'=>'save-user','method'=>'post','class'=>'form'])!!}
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="col-md-12">
                 <div class="col-md-6">
                     <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                        {!! Form::label('title','Employee Name') !!}
+                        {!! Form::label('title','Employee name') !!}
                         {!! Form::text('name',null,['class'=>'form-control','placeholder'=>'Name']) !!}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                         {!! Form::label('title','Username') !!}
-                        {!! Form::text('username',null,['class'=>'form-control','placeholder'=>'Username']) !!}
+                        {!! Form::email('username',null,['class'=>'form-control','placeholder'=>'Username']) !!}
                     </div>
                 </div>
             </div>
@@ -64,21 +64,8 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                        {!! Form::label('title','Employee Type') !!}
-                        {!! Form::select('role',array(''=>'Select','0'=>'Admin','1'=>'Assessor'),array(),['class'=>'form-control']) !!}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="col-md-12">
-                <div class="col-md-6">
-                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                        {!! Form::label('title','Reports to') !!}
-                        {!! Form::select('reportsTo',array(''=>'Select','DRCL'=>'DRCL'),array(),['class'=>'form-control']) !!}
+                        {!! Form::label('title','Employee type') !!}
+                        {!! Form::select('role',array(''=>'Select','0'=>'Admin','1'=>'Assessor','2'=>'Accountant'),array(),['class'=>'form-control','required'=>'required']) !!}
                     </div>
                 </div>
             </div>
