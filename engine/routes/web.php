@@ -35,8 +35,9 @@ Route::group(['prefix'=>'assessments'], function (){
     Route::get('/add-assessment-fee',[\App\Http\Controllers\Assessment\AssessmentController::class,'addAssessmentFee'])->name('add-assessment-fee');
     Route::get('/get-selected-items',[\App\Http\Controllers\Assessment\AssessmentController::class,'getSelectedItems'])->name('get-selected-items');
     Route::get('/new-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'newAssessment'])->name('new-assessment');
-    Route::get('/print-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'printAssessment'])->name('print-assessment');
-    Route::get('/list/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/individual/{flag}');
+    Route::post('/print-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'printAssessment'])->name('print-assessment');
+    Route::get('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('filter');
+    Route::get('/list/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/list/{flag}');
 });
 
 Route::group(['prefix'=>'divisions'], function (){

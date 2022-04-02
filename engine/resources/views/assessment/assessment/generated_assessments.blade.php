@@ -10,7 +10,7 @@
             <div class="panel-heading">Assessment list</div>
             <div class="panel-body">
 
-                {!! Form::open(['url'=>'add-fee','method'=>'post','class'=>'form','files'=>true])!!}
+                {!! Form::open(['url'=>'assessments/filter','method'=>'post','class'=>'form','files'=>true])!!}
                 <table class="table table-striped table-bordered">
                     <td>From</td>
                     <td>
