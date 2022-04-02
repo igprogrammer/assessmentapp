@@ -9,6 +9,7 @@
         <br><br>
 
         <div class="panel panel-primary">
+            @include('includes.flushMessage')
             <!-- Default panel contents -->
 
             <div class="panel-heading">{{ $title ?? 'List'}}</div>

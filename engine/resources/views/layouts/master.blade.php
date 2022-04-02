@@ -211,6 +211,8 @@
                         <li  style="padding-left: 5px !important;padding-right: 5px !important;" class="list-group-item normal"><a style="margin-left: 10px" href=""><span class="glyphicon glyphicon-book"></span> Assessment reports</a> <span class="glyphicon  pull-right"></span>
                             <ol class="list-roup" style="margin-left: 0px !important;">
 
+                                <li class="list-group-item normal"><a href="{{ url('assessments/tmp/')  }}/tmp"><span class="glyphicon glyphicon-folder-close"></span> Temp assessments</a> <span class="glyphicon pull-right"></span></li>
+
                                 <li class="list-group-item normal"><a href="{{ url('assessments/list/')  }}/individual"><span class="glyphicon glyphicon-folder-close"></span> My assessments</a> <span class="glyphicon pull-right"></span></li>
                                 <li class="list-group-item normal"><a href="{{ url('assessments/list/')  }}/all"><span class="glyphicon glyphicon-folder-close"></span> All assessments</a> <span class="glyphicon pull-right"></span></li>
 
@@ -468,7 +470,7 @@
                                        message: data.message,
                                        callback: function () {
                                            var base = '{{ url('assessments/continue-assessment') }}';
-                                           var url = base+'?payment_id='+data.payment_id;
+                                           var url = base+'?tempStatus='+data.tempStatus+'&payment_id='+data.payment_id;
                                            window.location.href = url;
                                        }
                                    })

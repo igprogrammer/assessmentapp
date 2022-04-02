@@ -49,6 +49,8 @@ class Payment extends Model
             $records = Payment::where('payments.user_id','=',Auth::user()->id)->orderBy('payments.id','DESC')->get();
         }elseif (strtolower($flag) == 'all'){
             $records = Payment::orderBy('payments.id','DESC')->get();
+        }elseif (strtolower($flag) == 'tmp'){
+            $records = TempPayment::where('temp_payments.user_id','=',Auth::user()->id)->orderBy('temp_payments.id','DESC')->get();
         }else{
             $records = null;
         }

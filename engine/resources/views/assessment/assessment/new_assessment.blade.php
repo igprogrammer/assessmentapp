@@ -4,19 +4,23 @@
 
     <div style="border-bottom:none;padding-top:10px; padding-bottom:2px;background-color: white;margin-top: 10px;margin-left:3px;margin-right: 3px;margin-bottom: 0px" class="ask fbbluebox">
 
-    @if($payment_id != 0)
+        @if($tempStatus == 1)
 
-        @if((int)$payment->invoice >= 991350000000)
-                <div class="alert alert-success alert-dismissable">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
-                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','nmb')" class="btn btn-info"><i class="glyphicon glyphicon-print"></i> NMB transfer</a>
-                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','crdb')" class="btn btn-warning"><i class="glyphicon glyphicon-print"></i> CRDB transfer</a>
-                    <a onclick="print_assessment('{{ encrypt($payment_id) }}','nbc')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> NBC transfer</a>
-                </div>
+            @if($payment_id != 0)
+
+                @if((int)$payment->invoice >= 991350000000)
+                    <div class="alert alert-success alert-dismissable">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <a onclick="print_assessment('{{ encrypt($payment_id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
+                        <a onclick="print_assessment('{{ encrypt($payment_id) }}','nmb')" class="btn btn-info"><i class="glyphicon glyphicon-print"></i> NMB transfer</a>
+                        <a onclick="print_assessment('{{ encrypt($payment_id) }}','crdb')" class="btn btn-warning"><i class="glyphicon glyphicon-print"></i> CRDB transfer</a>
+                        <a onclick="print_assessment('{{ encrypt($payment_id) }}','nbc')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> NBC transfer</a>
+                    </div>
+                @endif
+
+            @endif
+
         @endif
-
-    @endif
 
 
 

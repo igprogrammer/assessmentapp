@@ -19,6 +19,7 @@ use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentFee;
 use App\Models\Payment\TempItem;
 use App\Models\Payment\TempPayment;
+use App\Models\SystemConfig\SystemConfig;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -194,6 +195,25 @@ class AssessmentController extends Controller
     //continue assessment and allow assessment print
     public function continueAssessment(Request $request){
         $payment_id = decrypt($request->payment_id);//payment id from newly created payment for printing
+        $tempStatus = $request->tempStatus;
+
+        $fee_accounts = array();
+        foreach (FeeAccount::all() as $fee_account){
+            $fee_accounts[$fee_account->id] = $fee_account->account_name;
+        }
+
+        $divisions = array();
+        foreach (Division::all() as $division){
+            $divisions[$division->id] = $division->division_name;
+        }
+
+
+        if ($tempStatus == 2){
+            $payment = null;
+            return view('assessment.assessment.new_assessment')->with('title'.'New assessment')
+                ->with('title','Print assessment and add new')->with(compact('fee_accounts','divisions','payment_id','payment','tempStatus'));
+        }
+
         if (!empty($payment_id)){
             $payment = Payment::find($payment_id);
             if (empty($payment)){
@@ -201,18 +221,10 @@ class AssessmentController extends Controller
             }
 
             $payment_id = $payment->id;
-            $fee_accounts = array();
-            foreach (FeeAccount::all() as $fee_account){
-                $fee_accounts[$fee_account->id] = $fee_account->account_name;
-            }
 
-            $divisions = array();
-            foreach (Division::all() as $division){
-                $divisions[$division->id] = $division->division_name;
-            }
 
             return view('assessment.assessment.new_assessment')->with('title'.'New assessment')
-                ->with('title','Print assessment and add new')->with(compact('fee_accounts','divisions','payment_id','payment'));
+                ->with('title','Print assessment and add new')->with(compact('fee_accounts','divisions','payment_id','payment','tempStatus'));
         }else{
             return \redirect()->to('new-assessment')->with('title','New assessment')->with('error-message','Failed to create and print assessment.');
         }
@@ -302,7 +314,7 @@ class AssessmentController extends Controller
                 }
                 DB::commit();
                 $message = 'Assessment has been successfully forwarded to supervisor before invoice generation';
-                return response()->json(['success'=>1,'message'=>$message]);
+                return response()->json(['success'=>1,'message'=>$message,'tempStatus'=>$tempStatus,'payment_id'=>encrypt($temp_payment_id)]);
                 //return \redirect()->to('assessments/new-assessment')->with('title','New assessment')->with('success-message',$message);
 
             }
@@ -627,14 +639,18 @@ class AssessmentController extends Controller
         $temp_payment_id = $request->temp_payment_id;
         if (!empty($temp_payment_id)){
             $temp_item = TempItem::find($temp_item_id);
-            $temp_item->delete();
-            $temp_payment = TempPayment::find($temp_payment_id);
 
-            $temp_items = TempItem::getTempItems($temp_payment->id);
-            return response(['company_number'=>$temp_payment->company_number,'company_name'=>$temp_payment->company_name,
-                'filing_date'=>$temp_payment->filing_date, 'temp_payment_id'=>$temp_payment->id,'phone_number'=>$temp_payment->phone_number,
-                'expire_days'=>$temp_payment->expire_days,
-                'success'=>'1']);
+            if (!empty($temp_item)){
+                $temp_item->delete();
+                $temp_payment = TempPayment::find($temp_payment_id);
+                $temp_items = TempItem::getTempItems($temp_payment->id);
+                return response(['company_number'=>$temp_payment->company_number,'company_name'=>$temp_payment->company_name,
+                    'filing_date'=>$temp_payment->filing_date, 'temp_payment_id'=>$temp_payment->id,'phone_number'=>$temp_payment->phone_number,
+                    'expire_days'=>$temp_payment->expire_days,
+                    'success'=>'1']);
+            }else{
+                return response()->json(['success'=>2]);
+            }
         }else{
             return response(['success'=>2]);
         }
@@ -3349,8 +3365,16 @@ class AssessmentController extends Controller
 
         $payment_id = 0;
 
+        $sysConfig = SystemConfig::invoiceGeneration();
+
+        if ($sysConfig->invoiceGeneration = 1){
+            $tempStatus = 2;
+        }else{
+            $tempStatus = 1;
+        }
+
         return view('assessment.assessment.new_assessment')->with('title','New assessment')
-            ->with('fee_accounts',$fee_accounts)->with('divisions',$divisions)->with('payment_id',$payment_id);
+            ->with('fee_accounts',$fee_accounts)->with('divisions',$divisions)->with('payment_id',$payment_id)->with(compact('tempStatus'));
     }
 
     public function printAssessment(Request $request){
@@ -3404,7 +3428,13 @@ class AssessmentController extends Controller
         $payments = Payment::getAssessmentRecords($flag);
         $flag = ucfirst($flag);
 
-        return view('assessment.assessment.generated_assessments')->with('title',$flag)->with(compact('payments','flag'));
+        if (strtolower($flag) == 'tmp'){
+            return view('assessment.assessment.temporary_assessments')->with('title',$flag)->with(compact('payments','flag'));
+        }else{
+            return view('assessment.assessment.generated_assessments')->with('title',$flag)->with(compact('payments','flag'));
+
+        }
+
     }
 
 }

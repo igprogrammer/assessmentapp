@@ -37,6 +37,7 @@ Route::group(['prefix'=>'assessments'], function (){
     Route::get('/new-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'newAssessment'])->name('new-assessment');
     Route::post('/print-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'printAssessment'])->name('print-assessment');
     Route::get('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('filter');
+    Route::get('/tmp/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/tmp/{flag}');
     Route::get('/list/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/list/{flag}');
 });
 
