@@ -69,6 +69,10 @@ Route::group(['prefix'=>'fees'], function (){
     Route::get('/list',[\App\Http\Controllers\Assessment\FeeController::class,'fees'])->name('list');
 });
 
+Route::group(['middleware' => ['auth']], function() {
+    Route::get('logout',[\App\Http\Controllers\Assessment\LoginController::class,'login'])->name('logout');
+
+});
 Route::get('change-password/{employeeId}',[\App\Http\Controllers\Assessment\UserController::class,'changePassword']);
 Route::post('update-user',[\App\Http\Controllers\Assessment\UserController::class,'updateUser']);
 Route::get('user/{id}/edit',[\App\Http\Controllers\Assessment\UserController::class,'show'])->name('user/{id}/edit');

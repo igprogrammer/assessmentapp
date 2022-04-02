@@ -9,12 +9,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use function redirect;
 use function view;
 
 class LoginController extends Controller
 {
+
     public function authenticate(Request $request){
         $email = $request->email;
         $password= $request->password;
@@ -60,7 +62,11 @@ class LoginController extends Controller
     }
 
     public function logout(){
+
+        Session::flush();
+
         Auth::logout();
-        return redirect('/');
+
+        return redirect()->to('/');
     }
 }
