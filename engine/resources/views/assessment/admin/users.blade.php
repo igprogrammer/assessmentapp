@@ -84,10 +84,10 @@
                     @endif
                 </td>
                 <td>
-                    <a href='user/{{ $user->id }}/edit' class="btn btn-success"><i class='glyphicon glyphicon-edit'>View</i></a>
+                    <a href='user/{{ encrypt($user->id) }}/edit' class="btn btn-success"><i class='glyphicon glyphicon-edit'>View</i></a>
                 </td>
                 <td>
-                    <a href="{{ url('change-password') }}/<?php echo \Illuminate\Support\Facades\Crypt::encrypt($user->id)?>" class="btn btn-primary"> <i class="glyphicon glyphicon-plus-sign"></i> Change user password</a>
+                    <a href="{{ url('change-password') }}/{{ encrypt($user->id) }}" class="btn btn-primary"> <i class="glyphicon glyphicon-plus-sign"></i> Change user password</a>
                 </td>
                 <td>
                     @if($user->account_status == 1)

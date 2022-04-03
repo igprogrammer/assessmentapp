@@ -208,9 +208,9 @@ class AssessmentController extends Controller
         }
 
 
-        if ($tempStatus == 2){
+        if (in_array($tempStatus, array(2,3))){
             $payment = null;
-            return view('assessment.assessment.new_assessment')->with('title'.'New assessment')
+            return view('assessment.assessment.new_assessment')->with('title','New assessment')
                 ->with('title','Print assessment and add new')->with(compact('fee_accounts','divisions','payment_id','payment','tempStatus'));
         }
 
@@ -305,7 +305,7 @@ class AssessmentController extends Controller
             /*End assessment attachment*/
 
 
-            if ($tempStatus == 2){
+            if (in_array($tempStatus, array(2,3))){
 
                 $tempPayment = TempPayment::find($temp_payment_id);
 
@@ -313,14 +313,17 @@ class AssessmentController extends Controller
                     TempPayment::updateTempStatus($temp_payment_id,$tempStatus);
                 }
                 DB::commit();
-                $message = 'Assessment has been successfully forwarded to supervisor before invoice generation';
+                if ($tempStatus == 2){
+                    $message = 'Assessment has been successfully forwarded to supervisor before invoice generation';
+                }elseif ($tempStatus == 3){
+                    $message = 'Assessment has been successfully forwarded to accountant for invoice generation';
+                }
+
                 return response()->json(['success'=>1,'message'=>$message,'tempStatus'=>$tempStatus,'payment_id'=>encrypt($temp_payment_id)]);
                 //return \redirect()->to('assessments/new-assessment')->with('title','New assessment')->with('success-message',$message);
 
             }
 
-
-            /*end exchange rate*/
 
             //get section details
             $temp_payment = TempPayment::find($temp_payment_id);

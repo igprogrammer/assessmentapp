@@ -274,16 +274,64 @@
                                 <?php $config = \App\Http\Controllers\Assessment\GeneralController::invoiceGeneration(); ?>
                                 @if(!empty($config))
                                     @if($config->invoiceGeneration == 0)
+
                                         {!! Form::hidden('tempStatus',1) !!}
                                         {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+
+                                    @elseif($config->invoiceGeneration == 1)
+
+                                            @if(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 1)
+
+                                                @if(in_array($temp_payment->status, array(2,3)))
+                                                    {!! Form::hidden('tempStatus',1) !!}
+                                                    {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+                                                @else
+                                                    <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                @endif
+
+                                            @else
+                                                @if($temp_payment->status == 0)
+                                                    {!! Form::hidden('tempStatus',2) !!}
+                                                    {!! Form::submit('Forward to supervisor',['class'=>'btn btn-primary']) !!}
+                                                @else
+                                                    <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                @endif
+                                            @endif
+
                                     @else
-                                        @if($temp_payment->status == 0)
-                                            {!! Form::hidden('tempStatus',2) !!}
-                                            {!! Form::submit('Forward invoice',['class'=>'btn btn-primary']) !!}
+
+                                        @if(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 1)
+                                                @if($temp_payment->status == 2)
+                                                    {!! Form::hidden('tempStatus',3) !!}
+                                                    {!! Form::submit('Forward to accounts',['class'=>'btn btn-primary']) !!}
+                                                @else
+                                                    <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                @endif
+                                        @elseif(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 2)
+                                                @if($temp_payment->status == 3)
+                                                    {!! Form::hidden('tempStatus',1) !!}
+                                                    {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+                                                @else
+                                                    <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                @endif
                                         @else
-                                            {!! Form::hidden('tempStatus',1) !!}
-                                            {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+
+                                            @if($temp_payment->status == 0)
+                                                    {!! Form::hidden('tempStatus',2) !!}
+                                                    {!! Form::submit('Forward to supervisor',['class'=>'btn btn-primary']) !!}
+                                            @else
+                                                <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                            @endif
+
+                                                {{--@if($temp_payment->status == 0)
+                                                    {!! Form::hidden('tempStatus',2) !!}
+                                                    {!! Form::submit('Forward invoice',['class'=>'btn btn-primary']) !!}
+                                                @else
+                                                    {!! Form::hidden('tempStatus',1) !!}
+                                                    {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+                                                @endif--}}
                                         @endif
+
                                     @endif
                                 @endif
 

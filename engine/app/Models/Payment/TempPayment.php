@@ -2,6 +2,7 @@
 
 namespace App\Models\Payment;
 
+use App\Models\SystemConfig\SystemConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -16,10 +17,21 @@ class TempPayment extends Model
     }
 
     public static function getPendingAssessments(){
-        if (Auth::user()->isSupervisor == 1){
-            return TempPayment::whereIn('status', array(0,2))->paginate();
+
+        $sysConfig = SystemConfig::invoiceGeneration();
+        if ($sysConfig->invoiceGeneration == 1){
+
+            if (Auth::user()->isSupervisor == 1){
+                //return TempPayment::whereIn('status', array(0,2))->paginate();
+                return TempPayment::whereIn('status', array(2))->orderBy('id','DESC')->paginate();
+            }elseif (Auth::user()->isSupervisor == 2){
+                return TempPayment::whereIn('status', array(3))->orderBy('id','DESC')->paginate();
+            }else{
+                return TempPayment::where(['user_id'=>Auth::user()->id,'status'=>0])->orderBy('id','DESC')->paginate();
+            }
+
         }else{
-            return TempPayment::where(['user_id'=>Auth::user()->id,'status'=>0])->paginate();
+            return TempPayment::where(['user_id'=>Auth::user()->id,'status'=>0])->orderBy('id','DESC')->paginate();
         }
 
     }

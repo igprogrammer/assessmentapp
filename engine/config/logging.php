@@ -113,6 +113,12 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
         ],
+        'user-error'=>[
+            'driver' => 'daily',
+            'path' => storage_path('logs/user/user-error.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
 
         'slack' => [
             'driver' => 'slack',

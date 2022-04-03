@@ -68,7 +68,7 @@
                                     <input type="hidden" name="temp_payment_id" value="<?php echo $temp_payment->id; ?>">
                                 </td>
                                 <td>
-                                    <a class="btn btn-danger" onclick="remove_item('<?php echo $temp_item->id; ?>','<?php echo $temp_payment->id; ?>')"> Remove item</a>
+                                    <a @if(in_array(\Illuminate\Support\Facades\Auth::user()->isSupervisor, array(2,3)) || \Illuminate\Support\Facades\Auth::user()->id != $temp_item->user_id) disabled="disabled" disabled="disabled" @else @if(in_array($temp_payment->status, array(1,2,3))) disabled="disabled" @endif @endif class="btn btn-danger" onclick="remove_item('<?php echo $temp_item->id; ?>','<?php echo $temp_payment->id; ?>')"> Remove item</a>
                                 </td>
                             </tr>
                         <?php $total_amount = $total_amount + $temp_item->fee_amount; } ?>

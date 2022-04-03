@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Assessment System | {!! $title !!}</title>
+    <title>Assessment and Receipt System | {!! $title !!}</title>
 
     <link href="{{ asset('/css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('/css/full-slider.css') }}" rel="stylesheet">
@@ -117,7 +117,7 @@
         </div>
         <div class="col-md-6 hospital" style="text-align: center;font-size: 20px;">
             <i>
-                Assessment System
+                Assessment and Receipt System
             </i>
         </div>
     </div>
@@ -137,7 +137,7 @@
             <ul class="nav navbar-nav navbar-left" style="margin-right: 5%; font-family: arial" >
                 <li>
                     <a href ="" style="font-size: 12px">
-                        <span class="glyphicon glyphicon-dashboard"></span> Assessment Dashboard
+                        <span class="glyphicon glyphicon-dashboard"></span> System Dashboard
                     </a>
                 </li>
 
@@ -296,7 +296,7 @@
 <div class="container-fluid">
     <div class="row-fluid">
         <nav class="navbar navbar-inverse navbar-static-bottom" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
-            <center><p style="color: white">Assessment System &copy; BRELA  <?= date('Y') ?></p></center>
+            <center><p style="color: white">Assessment and Receipt System &copy; BRELA  <?= date('Y') ?></p></center>
         </nav>
     </div>
 </div>

@@ -13,6 +13,68 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+
+
+
+Route::get('bls', function (){
+    $types = \Illuminate\Support\Facades\DB::connection('mysql_b')->table('tnbp_eadvisory_category')
+        ->where(['status'=>0])->get();
+
+    $apps = array();
+    foreach ($types as $type){
+
+        $apps[] = $type->categoryId;
+
+        $categoryName = $type->categoryName;
+        $categoryName = simplexml_load_string($categoryName);
+        $categoryName = json_encode($categoryName);
+        $categoryName = json_decode($categoryName,TRUE);
+
+        if (is_array($categoryName['CategoryName'])){
+            $categoryName = $categoryName['CategoryName'][0];
+        }else{
+            $categoryName = $categoryName['CategoryName'];
+        }
+
+        $applyFeeInUsd = $type->applyFeeinUsd;
+        $principalUsdFee = $type->licenseFeeUSD;
+        $principalTzsFee = $type->licenseFeeTShs;
+        $branchUsdFee = $type->branchLicenseFeeTShs;
+        $branchTzsFee = $type->branchLicenseFeeUsd;
+        $licenceType = $type->licenseIssuingAuthority;
+
+        $checkName = \App\Models\Assessment\FeeItem::where(['item_name'=>$categoryName])->first();
+        if (empty($checkName)){
+
+            \Illuminate\Support\Facades\DB::table('fee_items')->insert(array(
+                'user_id'=>\Illuminate\Support\Facades\Auth::user()->id,
+                'fee_id'=>7,
+                'item_name'=>$categoryName,
+                'item_amount'=>$principalTzsFee,
+                'penalty_amount'=>0,
+                'days'=>28,
+                'copy_charge'=>0,
+                'stamp_duty_amount'=>0,
+                'currency'=>'TShs',
+                'anniversary'=>'no',
+                'active'=>'yes',
+                'applyFeeInUsd'=>$applyFeeInUsd,
+                'principalUsdFee'=>$principalUsdFee,
+                'principalTzsFee'=>$principalTzsFee,
+                'branchUsdFee'=>$branchUsdFee,
+                'branchTzsFee'=>$branchTzsFee,
+                'licenceType'=>$licenceType
+            ));
+
+        }
+
+    }
+
+    dd(count($apps). ' items loaded');
+});
+
+
 Route::group(['prefix'=>'assessments'], function (){
     Route::post('request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber']);
     Route::get('/calculate-fee',[\App\Http\Controllers\Assessment\FeeCalculationController::class,'calculateFee'])->name('calculate-fee');

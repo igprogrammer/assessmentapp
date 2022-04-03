@@ -112,9 +112,27 @@
                                 @if($config->invoiceGeneration == 0)
                                     {!! Form::hidden('tempStatus',1) !!}
                                     {!! Form::submit('Generate invoice',['class'=>'btn btn-success','id'=>'generateInvoice']) !!}
+                                @elseif($config->invoiceGeneration == 1)
+
+                                    @if(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 1)
+                                            {!! Form::hidden('tempStatus',1) !!}
+                                            {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+                                    @else
+                                            {!! Form::hidden('tempStatus',2) !!}
+                                            {!! Form::submit('Forward to supervisor',['class'=>'btn btn-primary']) !!}
+                                    @endif
                                 @else
-                                    {!! Form::hidden('tempStatus',2) !!}
-                                    {!! Form::submit('Forward invoice',['class'=>'btn btn-primary','id'=>'generateInvoice']) !!}
+                                        @if(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 1)
+                                            {!! Form::hidden('tempStatus',3) !!}
+                                            {!! Form::submit('Forward to accounts',['class'=>'btn btn-primary']) !!}
+                                        @elseif(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 2)
+                                            {!! Form::hidden('tempStatus',1) !!}
+                                            {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+                                        @else
+                                            {!! Form::hidden('tempStatus',2) !!}
+                                            {!! Form::submit('Forward to supervisor',['class'=>'btn btn-primary']) !!}
+                                        @endif
+
                                 @endif
                             @endif
 

@@ -50,29 +50,38 @@ class UserController extends Controller
 
     public function updateUser(Request $request)
     {
-        $id = $request->id;
 
-        if($id != null){
+        try {
+            $id = $request->id;
 
-            $validator = Validator::make($request->all(), User::$edit_rules);
-            if($validator->passes()){
+            if($id != null){
 
-                $user = User::find($id);
-                $user->name = $request->name;
-                $user->email = $request->email;
-                $user->username = $request->email;
-                $user->role = $request->role;
-                $user->save();
+                $validator = Validator::make($request->all(), User::$edit_rules);
+                if($validator->passes()){
 
-                $users = User::paginate(10);
+                    $user = User::find($id);
+                    $user->name = $request->name;
+                    $user->email = $request->email;
+                    $user->username = $request->email;
+                    $user->role = $request->role;
+                    $user->isSupervisor = $request->isSupervisor;
+                    $user->save();
 
-                return redirect()->to('users')->with('users', $users)->with('success-message','Employee information successfully updated.')->with('title', 'Employees');
+                    $users = User::paginate(10);
+
+                    return redirect()->to('users')->with('users', $users)->with('success-message','Employee information successfully updated.')->with('title', 'Employees');
+                }else{
+                    return redirect()->to('user/'.$id.'/edit')->with('error-message','Failed to update employee information.')->withInput()->withErrors($validator);
+                }
+
             }else{
-                return redirect()->to('user/'.$id.'/edit')->with('error-message','Failed to update employee information.')->withInput()->withErrors($validator);
+                redirect()->to('users')->with('error-message', 'No employee with the reference provided.');
             }
 
-        }else{
-            redirect()->to('users')->with('error-message', 'No employee with the reference provided.');
+        }catch (\Exception $exception){
+            $message = 'An error has occurred, please contact system administrator';
+            GeneralController::exceptionHandler('Controller',$exception,'UserController','updateUser','user-error');
+            return redirect()->back()->with('error-message',$message);
         }
 
 
@@ -82,6 +91,7 @@ class UserController extends Controller
 
     public function show($id)
     {
+        $id = decrypt($id);
         $user = User::find($id);
         return view('assessment.admin.edit_user')->with('title', 'Edit user')
             ->with('user', $user);

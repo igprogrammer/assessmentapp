@@ -59,63 +59,66 @@
                                 <td>
                                     <a class="btn btn-warning" href="{{ url('assessments/temp-assessment-details') }}/{{ encrypt($tempAssessment->id) }}"><i class="glyphicon glyphicon-edit"></i> Continue</a>
 
-                                    <a @if($tempAssessment->user_id != \Illuminate\Support\Facades\Auth::user()->id) disabled="disabled" @endif class="btn btn-danger" onclick="removeTempAssessment{{ $tempAssessment->id }}('{{ $tempAssessment->id }}')"><i class="glyphicon glyphicon-trash"></i> Delete</a>
-                                    <script>
-                                        function removeTempAssessment{{ $tempAssessment->id }}(id){
-                                            bootbox.dialog({
-                                                closeButton: false,
-                                                message: "Are you sure you want to delete this incomplete assessment? ",
-                                                title: "Confirm delete assessment",
-                                                buttons: {
-                                                    danger: {
-                                                        label: "&nbsp;&nbsp;&nbsp;&nbsp; Yes &nbsp;&nbsp;&nbsp;&nbsp;",
-                                                        className: "btn-danger",
-                                                        callback: function() {
+                                    @if(in_array(\Illuminate\Support\Facades\Auth::user()->isSuperVisor, array(1,2)))
+                                        <a @if($tempAssessment->user_id != \Illuminate\Support\Facades\Auth::user()->id) disabled="disabled" @endif class="btn btn-danger" onclick="removeTempAssessment{{ $tempAssessment->id }}('{{ $tempAssessment->id }}')"><i class="glyphicon glyphicon-trash"></i> Delete</a>
+                                        <script>
+                                            function removeTempAssessment{{ $tempAssessment->id }}(id){
+                                                bootbox.dialog({
+                                                    closeButton: false,
+                                                    message: "Are you sure you want to delete this incomplete assessment? ",
+                                                    title: "Confirm delete assessment",
+                                                    buttons: {
+                                                        danger: {
+                                                            label: "&nbsp;&nbsp;&nbsp;&nbsp; Yes &nbsp;&nbsp;&nbsp;&nbsp;",
+                                                            className: "btn-danger",
+                                                            callback: function() {
 
-                                                            if(window.XMLHttpRequest) {
-                                                                myObject = new XMLHttpRequest();
-                                                            }else if(window.ActiveXObject){
-                                                                myObject = new ActiveXObject('Micrsoft.XMLHTTP');
-                                                                myObject.overrideMimeType('text/xml');
-                                                            }
-
-                                                            myObject.onreadystatechange = function (){
-                                                                data = myObject.responseText;
-                                                                var res = JSON.parse(data);
-                                                                if (myObject.readyState == 4) {
-
-                                                                    if (res.success == 1){
-                                                                        bootbox.alert({
-                                                                            message: res.message,
-                                                                            callback: function () {
-
-                                                                                window.location.reload();
-                                                                                $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
-                                                                                filterButton.prop('disabled',false);
-
-
-                                                                            }
-                                                                        })
-                                                                    }
+                                                                if(window.XMLHttpRequest) {
+                                                                    myObject = new XMLHttpRequest();
+                                                                }else if(window.ActiveXObject){
+                                                                    myObject = new ActiveXObject('Micrsoft.XMLHTTP');
+                                                                    myObject.overrideMimeType('text/xml');
                                                                 }
-                                                            }; //specify name of function that will handle server response........
-                                                            myObject.open('GET','{{ url('assessments/delete-assessment') }}?id='+id,true);
-                                                            myObject.send();
+
+                                                                myObject.onreadystatechange = function (){
+                                                                    data = myObject.responseText;
+                                                                    var res = JSON.parse(data);
+                                                                    if (myObject.readyState == 4) {
+
+                                                                        if (res.success == 1){
+                                                                            bootbox.alert({
+                                                                                message: res.message,
+                                                                                callback: function () {
+
+                                                                                    window.location.reload();
+                                                                                    $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
+                                                                                    filterButton.prop('disabled',false);
 
 
-                                                        }
-                                                    },
-                                                    main: {
-                                                        label: "&nbsp;&nbsp;&nbsp;&nbsp; No &nbsp;&nbsp;&nbsp;&nbsp;",
-                                                        className: "btn-primary",
-                                                        callback: function() {
-                                                            return true;
+                                                                                }
+                                                                            })
+                                                                        }
+                                                                    }
+                                                                }; //specify name of function that will handle server response........
+                                                                myObject.open('GET','{{ url('assessments/delete-assessment') }}?id='+id,true);
+                                                                myObject.send();
+
+
+                                                            }
+                                                        },
+                                                        main: {
+                                                            label: "&nbsp;&nbsp;&nbsp;&nbsp; No &nbsp;&nbsp;&nbsp;&nbsp;",
+                                                            className: "btn-primary",
+                                                            callback: function() {
+                                                                return true;
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            });
-                                        }
-                                    </script>
+                                                });
+                                            }
+                                        </script>
+                                    @endif
+
                                 </td>
                             </tr>
                             <?php $sn++; ?>
