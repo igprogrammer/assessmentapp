@@ -132,7 +132,7 @@
 
 
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="pagination">
 
                                     </div>
@@ -141,7 +141,7 @@
 
                         @else
                             <tr>
-                                <td colspan="7"><b>No record found.</b></td>
+                                <td colspan="8"><b>No record found.</b></td>
                             </tr>
                         @endif
 

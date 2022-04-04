@@ -161,6 +161,7 @@ class FeeController extends Controller
             $stamp_duty_amount = $request->stamp_duty_amount;
             $currency = $request->currency;
             $feeItemId = $request->feeItemId;
+            $defineFeeAmount = $request->defineFeeAmount;
 
             $validator = Validator::make($request->all(), FeeItem::$add_rules);
 
@@ -168,7 +169,7 @@ class FeeController extends Controller
                 $check = FeeItem::find($feeItemId);
                 if (!empty($check)){
 
-                    $feeItem = FeeItem::updateFeeItem($feeItemId,$fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency);
+                    $feeItem = FeeItem::updateFeeItem($feeItemId,$fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency,$defineFeeAmount);
 
                     if (!empty($feeItem)){
                         $message = Auth::user()->name.' Successfully updated fee item';
@@ -249,6 +250,7 @@ class FeeController extends Controller
             $amount = $request->amount;
             $feeId = $request->feeId;
             $isActive = $request->active;
+            $defineFeeAmount = $request->defineFeeAmount;
 
             $validator = Validator::make($request->all(), Fee::$add_rules);
 
@@ -256,7 +258,7 @@ class FeeController extends Controller
                 $check = Fee::find($feeId);
                 if (!empty($check)){
 
-                    $fee = Fee::updateFee($feeId,$fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code,$isActive);
+                    $fee = Fee::updateFee($feeId,$fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code,$isActive,$defineFeeAmount);
                     if (!empty($fee)){
                         $message = Auth::user()->name.' Successfully updated fee';
                     }else{
@@ -267,7 +269,7 @@ class FeeController extends Controller
                     EventLog::saveEvent(Auth::user()->username,'System access','User', Auth::user()->name,'Success','Update fee',
                         $message,EventLog::getIpAddress(),EventLog::getMacAddress(),'FeeController','updateFee');
 
-                    return redirect()->back()->with('title','Update fee')->with('success-message','Successfully updated fee');
+                    return redirect()->to('fees/list')->with('title','Update fee')->with('success-message','Successfully updated fee');
                 }else{
                     return redirect()->back()->with('error-message','No record to update was found');
                 }
@@ -324,13 +326,14 @@ class FeeController extends Controller
             $copy_charge = $request->copy_charge;
             $stamp_duty_amount = $request->stamp_duty_amount;
             $currency = $request->currency;
+            $defineFeeAmount = $request->defineFeeAmount;
 
             $validator = Validator::make($request->all(), FeeItem::$add_rules);
             if($validator->passes()){
                 $check_if_exists = FeeItem::where('item_name','LIKE','%'.$item_name.'%')->where(['fee_id'=>$fee_id,'item_amount'=>$item_amount])->first();
                 if (empty($check_if_exists)){
 
-                    $saveFeeItem = FeeItem::saveFeeItem($fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency);
+                    $saveFeeItem = FeeItem::saveFeeItem($fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency,$defineFeeAmount);
 
                     if (!empty($saveFeeItem)){
                         $message = Auth::user()->name.' Successfully added new fee item';
@@ -405,6 +408,7 @@ class FeeController extends Controller
             $gfs_code = $request->gfs_code;
             $has_form = $request->has_form;
             $amount = $request->amount;
+            $defineFeeAmount = $request->defineFeeAmount;
 
             $validator = Validator::make($request->all(), Fee::$add_rules);
 
@@ -412,7 +416,7 @@ class FeeController extends Controller
                 $check_if_exists = Fee::where(['fee_code'=>$fee_code,'gfs_code'=>$gfs_code])->first();
                 if (empty($check_if_exists)){
 
-                    $fee = Fee::saveFee($fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code);
+                    $fee = Fee::saveFee($fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code,$defineFeeAmount);
                     if (!empty($fee)){
                         $message = Auth::user()->name.' Successfully added new fee';
                     }else{

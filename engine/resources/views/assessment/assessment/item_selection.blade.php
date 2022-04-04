@@ -92,6 +92,16 @@
                             {!! Form::number('number_of_files',1,['class'=>'form-control','id'=>'number_of_files','required','min'=>'1']) !!}
                         </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                            {!! Form::label('title','Item fee') !!}
+                            {!! Form::text('item_fee',null,['class'=>'form-control','id'=>'item_fee','placeholder'=>'Please specify item amount here']) !!}
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-12">
                     <div class="col-md-4">
                         <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                             {{--<input type="submit" name="submit" value="Calculate fee" class="btn btn-primary" id="calculateFee">--}}

@@ -20,7 +20,7 @@ class UserController extends Controller
     }
 
     //function to process update password
-    public function update_password(Request $request){
+    public function updatePassword(Request $request){
         $validator = Validator::make($request->all(), User::$update_password_rules);
         $employee_id = $request->id;
 

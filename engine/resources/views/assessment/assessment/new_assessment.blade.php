@@ -502,6 +502,12 @@
                                 document.getElementById('currency').value = '';
                                 document.getElementById('year').value = '';
 
+                                if (response.defineFeeAmount == '1'){
+                                    document.getElementById('item_fee').value = '';
+                                }else{
+                                    document.getElementById('item_fee').value = response.item_amount;
+                                }
+
 
                             }else{
                                 document.getElementById('filing_year').style.display = 'none';
@@ -515,6 +521,12 @@
                                 document.getElementById('charge_days').value = '';
                                 document.getElementById('currency').value = '';
                                 document.getElementById('year').value = '2022';
+
+                                if (response.defineFeeAmount == '1'){
+                                    document.getElementById('item_fee').value = '';
+                                }else{
+                                    document.getElementById('item_fee').value = response.item_amount;
+                                }
                             }
                         }else{
                             document.getElementById('filing_year').style.display = 'none';
@@ -553,7 +565,21 @@
                 var calculationType = $('#calculationType').val();
             }
 
-            var licenceType = document.getElementById('licenceType').value;
+            if($('#item_fee').val() == ''){
+                bootbox.alert('Please define item fee amount');
+                return false;
+            }else {
+                var item_fee = $('#item_fee').val();
+            }
+
+            if($('#licenceType').val() == ''){
+                bootbox.alert('Please select licence type');
+                return false;
+            }else {
+                var licenceType = $('#licenceType').val();
+            }
+
+            //var licenceType = document.getElementById('licenceType').value;
 
             if (item_id != ''){
 
@@ -570,7 +596,8 @@
                                 document.getElementById('filing_year').style.display = 'block';
                                 document.getElementById('item_contents').style.display = 'block';
                                 document.getElementById('item_name').value = response.item_name;
-                                document.getElementById('item_amount').value = response.item_amount;
+                                //document.getElementById('item_amount').value = response.item_amount;
+                                document.getElementById('item_amount').value = item_fee;
                                 document.getElementById('penalty_amount').value = response.penalty_amount;
                                 //document.getElementById('copy_charge').value = response.cp_charge;
                                 document.getElementById('charge_days').value = response.days;
@@ -582,7 +609,8 @@
                                 document.getElementById('item_contents').style.display = 'block';
 
                                 document.getElementById('item_name').value = response.item_name;
-                                document.getElementById('item_amount').value = response.item_amount;
+                                //document.getElementById('item_amount').value = response.item_amount;
+                                document.getElementById('item_amount').value = item_fee;
                                 document.getElementById('penalty_amount').value = response.penalty_amount;
                                 //document.getElementById('copy_charge').value = response.cp_charge;
                                 document.getElementById('charge_days').value = response.days;
@@ -633,7 +661,8 @@
 
 
                             }else{
-                                alert(response.success);
+                                bootbox.alert(response.message);
+                                return false;
                             }
 
 
@@ -646,7 +675,7 @@
 
                     }
                 }; //specify name of function that will handle server response........
-                myObject.open('GET','{{ url("assessments/calculate-fee") }}?licenceType='+licenceType+'&calculationType='+calculationType+'&number_of_files='+number_of_files+'&year='+year+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id,true);
+                myObject.open('GET','{{ url("assessments/calculate-fee") }}?item_amount='+item_fee+'&licenceType='+licenceType+'&calculationType='+calculationType+'&number_of_files='+number_of_files+'&year='+year+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id,true);
                 myObject.send();
 
             }else{

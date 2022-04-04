@@ -111,6 +111,12 @@
                                 {!! Form::select('active',[''=>'Select status','yes'=>'Yes','no'=>'No'],$fee->active,['class'=>'form-control']) !!}
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                {!! Form::label('title','Define fee amount?') !!}
+                                {!! Form::select('defineFeeAmount',[''=>'Select status','1'=>'Yes','0'=>'No'],$fee->defineFeeAmount,['class'=>'form-control','required'=>'required']) !!}
+                            </div>
+                        </div>
                     </div>
 
                 </div>

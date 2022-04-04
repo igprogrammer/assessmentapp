@@ -26,6 +26,7 @@ class FeeCalculationController extends Controller
             $current_date = date('Y-m-d');
             $calculationType = $request->calculationType;
             $licenceType = $request->licenceType;
+            $item_amount = $request->item_amount;
 
             if (!empty($number_of_files || $number_of_files != null)){
                 $number_of_files = $number_of_files;
@@ -48,7 +49,13 @@ class FeeCalculationController extends Controller
                 if (!empty($fee)){
 
                     $account_code = $fee->account_code;
-                    $item_amount = $fee_item->item_amount;
+
+                    if ($fee_item->defineFeeAmount == 1){
+                        $item_amount = $item_amount;
+                    }else{
+                        $item_amount = $fee_item->item_amount;
+                    }
+
                     $penalty = $fee_item->penalty_amount;
                     $currency = $fee_item->currency;
                     $days = $fee_item->days;
@@ -1113,9 +1120,9 @@ class FeeCalculationController extends Controller
                         $penalty = $penalty_amount;
 
                         if ($calculationType == 1){
-                            $currency = 'TSHs';
+                            $currency = 'TZS';
                         }else{
-                            $currency = 'US $';
+                            $currency = 'USD';
                         }
 
 
@@ -1125,8 +1132,28 @@ class FeeCalculationController extends Controller
                            'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
 
                     }
+                    elseif ($account_code == 440322){
+
+                        if ($has_form == 'yes'){
+
+                        }else{
+
+                            $total_amount = $item_amount;
+                            $penalty = $penalty;
+                            $currency = $currency;
+                            $days = $days;
+                            $copy_charges = $copy_charges;
+
+                        }
+
+                        //return response as json
+                        return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
+                            'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'number_of_files'=>$number_of_files,
+                            'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
+
+                    }
                     else{
-                        return response()->json(['success'=>12]);//Invalid account code
+                        return response()->json(['success'=>12,'message'=>'Invalid account code, cannot proceed please contact system administrator']);//Invalid account code
                     }
 
                 }else{

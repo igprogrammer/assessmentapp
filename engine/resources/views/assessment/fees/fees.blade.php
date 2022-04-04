@@ -60,6 +60,9 @@
                             <th>
                                 Has form
                             </th>
+                            <th>
+                                Define fee?
+                            </th>
 
                             <th>
                                 Edit
@@ -103,7 +106,20 @@
                             <td><?php echo $fee->type; ?></td>
                             <td><?php echo $fee->gfs_code; ?></td>
                             <td><?php echo $fee->amount; ?></td>
-                            <td><?php echo $fee->has_form; ?></td>
+                            <td>
+                                @if($fee->has_form == 'yes')
+                                    Yes
+                                @else
+                                    No
+                                @endif
+                            </td>
+                            <td>
+                                @if($fee->defineFeeAmount == 1)
+                                    Yes
+                                @else
+                                    No
+                                @endif
+                            </td>
                             <td><a class="btn btn-warning" href="{{ url('fees') }}/edit-fee/{{ encrypt($fee->id) }}"><i class="glyphicon glyphicon-edit"></i> Edit</a></td>
                         </tr>
                         <?php $sn++; } ?>

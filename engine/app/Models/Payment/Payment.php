@@ -44,15 +44,43 @@ class Payment extends Model
         return $payment;
     }
 
-    public static function getAssessmentRecords($flag){
+    public static function getAssessmentRecords($flag, $fromDate = null, $toDate = null){
+        $records = array();
+        if ($fromDate != null && $toDate != null){
+            $fromDate = date('Y-m-d 00:00:00', strtotime($fromDate));
+            $toDate = date('Y-m-d 23:59:59', strtotime($toDate));
+        }
+
         if (strtolower($flag) == 'individual'){
-            $records = Payment::where('payments.user_id','=',Auth::user()->id)->orderBy('payments.id','DESC')->get();
+
+            $records = Payment::where('payments.user_id','=',Auth::user()->id);
+
+            if ($fromDate != null && $toDate != null){
+                $records = $records->whereBetween('created_at', array($fromDate,$toDate));
+            }
+
+            $records = $records->orderBy('payments.id','DESC')->get();
+
         }elseif (strtolower($flag) == 'all'){
-            $records = Payment::orderBy('payments.id','DESC')->get();
+
+            $records = Payment::orderBy('payments.id','DESC');
+
+            if ($fromDate != null && $toDate != null){
+                $records = $records->whereBetween('created_at', array($fromDate,$toDate));
+            }
+
+            $records = $records->get();
+
         }elseif (strtolower($flag) == 'tmp'){
-            $records = TempPayment::where('temp_payments.user_id','=',Auth::user()->id)->orderBy('temp_payments.id','DESC')->get();
-        }else{
-            $records = null;
+
+            $records = TempPayment::where('temp_payments.user_id','=',Auth::user()->id);
+
+            if ($fromDate != null && $toDate != null){
+                $records = $records->whereBetween('created_at', array($fromDate,$toDate));
+            }
+
+            $records = $records->orderBy('temp_payments.id','DESC')->get();
+
         }
 
         return $records;

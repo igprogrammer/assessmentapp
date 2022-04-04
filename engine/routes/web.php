@@ -14,6 +14,35 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('items', function (){
+
+    $items = \App\Models\Assessment\Fee::all();
+
+    $apps = array();
+    foreach ($items as $item){
+
+        $apps[] = $item->id;
+        \Illuminate\Support\Facades\DB::connection('sqlsrv')->table('fee_items')->insert(array(
+            'user_id'=>\Illuminate\Support\Facades\Auth::user()->id,
+            'fee_id'=>$item->id,
+            'item_name'=>$item->fee_name,
+            'item_amount'=>$item->amount,
+            'penalty_amount'=>2500,
+            'days'=>14,
+            'copy_charge'=>0,
+            'stamp_duty_amount'=>0,
+            'currency'=>$item->currency,
+            'anniversary'=>'no',
+            'active'=>'yes'
+        ));
+
+
+    }
+
+    echo count($apps).' successfully';
+
+});
+
 
 
 
@@ -98,7 +127,10 @@ Route::group(['prefix'=>'assessments'], function (){
     Route::get('/get-selected-items',[\App\Http\Controllers\Assessment\AssessmentController::class,'getSelectedItems'])->name('get-selected-items');
     Route::get('/new-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'newAssessment'])->name('new-assessment');
     Route::post('/print-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'printAssessment'])->name('print-assessment');
-    Route::get('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('filter');
+    Route::get('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments'])->name('filter');
+    Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments'])->name('filter');
+    Route::get('/temp-filter', [\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments'])->name('temp-filter');
+    Route::post('/temp-filter', [\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments'])->name('temp-filter');
     Route::get('/tmp/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/tmp/{flag}');
     Route::get('/list/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedAssessments'])->name('/list/{flag}');
 });
@@ -136,6 +168,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('logout',[\App\Http\Controllers\Assessment\LoginController::class,'login'])->name('logout');
 
 });
+Route::post('change-password', [\App\Http\Controllers\Assessment\UserController::class,'updatePassword']);
 Route::get('change-password/{employeeId}',[\App\Http\Controllers\Assessment\UserController::class,'changePassword']);
 Route::post('update-user',[\App\Http\Controllers\Assessment\UserController::class,'updateUser']);
 Route::get('user/{id}/edit',[\App\Http\Controllers\Assessment\UserController::class,'show'])->name('user/{id}/edit');

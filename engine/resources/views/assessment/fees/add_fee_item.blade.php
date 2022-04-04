@@ -106,6 +106,12 @@
                                 {!! Form::select('currency',[''=>'Select currency']+$currencies,array(),['class'=>'form-control']) !!}
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                {!! Form::label('title','Define fee amount?') !!}
+                                {!! Form::select('defineFeeAmount',[''=>'Select status','1'=>'Yes','0'=>'No'], array(),['class'=>'form-control','required'=>'required']) !!}
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-12">
 

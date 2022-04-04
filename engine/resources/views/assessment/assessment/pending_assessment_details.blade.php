@@ -171,6 +171,14 @@
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                {!! Form::label('title','Item fee') !!}
+                                                {!! Form::text('item_fee',null,['class'=>'form-control','id'=>'item_fee','placeholder'=>'Please specify item amount here']) !!}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="col-md-4">
+                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                                 <br><a class="btn btn-success" onclick="calculate_fee()">Calculate fee</a>
                                             </div>
                                         </div>
@@ -286,7 +294,12 @@
                                                     {!! Form::hidden('tempStatus',1) !!}
                                                     {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
                                                 @else
-                                                    <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                    @if($temp_payment->user_id == \Illuminate\Support\Facades\Auth::user()->id)
+                                                        {!! Form::hidden('tempStatus',1) !!}
+                                                        {!! Form::submit('Generate invoice',['class'=>'btn btn-success']) !!}
+                                                    @else
+                                                        <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                    @endif
                                                 @endif
 
                                             @else
@@ -305,7 +318,14 @@
                                                     {!! Form::hidden('tempStatus',3) !!}
                                                     {!! Form::submit('Forward to accounts',['class'=>'btn btn-primary']) !!}
                                                 @else
-                                                    <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+
+                                                    @if($temp_payment->user_id == \Illuminate\Support\Facades\Auth::user()->id)
+                                                        {!! Form::hidden('tempStatus',3) !!}
+                                                        {!! Form::submit('Forward to accounts',['class'=>'btn btn-primary']) !!}
+                                                    @else
+                                                        <a href="{{ url('assessments/pending') }}" class="btn btn-primary"><i class="glyphicon glyphicon-backward"></i> Back to list</a>
+                                                    @endif
+
                                                 @endif
                                         @elseif(\Illuminate\Support\Facades\Auth::user()->isSupervisor == 2)
                                                 @if($temp_payment->status == 3)
@@ -592,7 +612,6 @@
                                         label: "Okay",
                                         className: "btn-primary",
                                         callback: function() {
-                                            window.location.reload();
                                             var company_number = response.company_number;
                                             var company_name = response.company_name;
                                             var filing = response.filing_date;
@@ -716,6 +735,12 @@
                                 document.getElementById('currency').value = '';
                                 document.getElementById('year').value = '';
 
+                                if (response.defineFeeAmount == '1'){
+                                    document.getElementById('item_fee').value = '';
+                                }else{
+                                    document.getElementById('item_fee').value = response.item_amount;
+                                }
+
 
                             }else{
                                 document.getElementById('filing_year').style.display = 'none';
@@ -729,6 +754,12 @@
                                 document.getElementById('charge_days').value = '';
                                 document.getElementById('currency').value = '';
                                 document.getElementById('year').value = '2022';
+
+                                if (response.defineFeeAmount == '1'){
+                                    document.getElementById('item_fee').value = '';
+                                }else{
+                                    document.getElementById('item_fee').value = response.item_amount;
+                                }
                             }
                         }else{
                             document.getElementById('filing_year').style.display = 'none';
@@ -767,7 +798,21 @@
                 var calculationType = $('#calculationType').val();
             }
 
-            var licenceType = document.getElementById('licenceType').value;
+            if($('#item_fee').val() == ''){
+                bootbox.alert('Please define item fee amount');
+                return false;
+            }else {
+                var item_fee = $('#item_fee').val();
+            }
+
+            if($('#licenceType').val() == ''){
+                bootbox.alert('Please select licence type');
+                return false;
+            }else {
+                var licenceType = $('#licenceType').val();
+            }
+
+            //var licenceType = document.getElementById('licenceType').value;
 
             if (item_id != ''){
 
@@ -784,7 +829,8 @@
                                 document.getElementById('filing_year').style.display = 'block';
                                 document.getElementById('item_contents').style.display = 'block';
                                 document.getElementById('item_name').value = response.item_name;
-                                document.getElementById('item_amount').value = response.item_amount;
+                                //document.getElementById('item_amount').value = response.item_amount;
+                                document.getElementById('item_amount').value = item_fee;
                                 document.getElementById('penalty_amount').value = response.penalty_amount;
                                 //document.getElementById('copy_charge').value = response.cp_charge;
                                 document.getElementById('charge_days').value = response.days;
@@ -796,7 +842,8 @@
                                 document.getElementById('item_contents').style.display = 'block';
 
                                 document.getElementById('item_name').value = response.item_name;
-                                document.getElementById('item_amount').value = response.item_amount;
+                                //document.getElementById('item_amount').value = response.item_amount;
+                                document.getElementById('item_amount').value = item_fee;
                                 document.getElementById('penalty_amount').value = response.penalty_amount;
                                 //document.getElementById('copy_charge').value = response.cp_charge;
                                 document.getElementById('charge_days').value = response.days;
@@ -847,7 +894,8 @@
 
 
                             }else{
-                                alert(response.success);
+                                bootbox.alert(response.message);
+                                return false;
                             }
 
 

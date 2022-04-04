@@ -79,7 +79,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             {!! Form::hidden('feeAccountId',$feeAccount->id) !!}
-                            {!! Form::submit('Add fee account',['class'=>'btn btn-success']) !!}
+                            {!! Form::submit('update fee account',['class'=>'btn btn-success']) !!}
                         </div>
                     </div>
                 </div>

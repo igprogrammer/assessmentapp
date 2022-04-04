@@ -94,29 +94,6 @@ class AssessmentController extends Controller
         }
     }
 
-    public function filterAssessment(Request $request){
-        try {
-            $from_date = $request->from_date;
-            $to_date = $request->to_date;
-            $flag = $request->flag;
-
-            if (strtolower($flag) == 'individual'){
-                $payments = Payment::where('payments.user_id','=',Auth::user()->id)
-                    ->whereBetween('add_date',array($from_date,$to_date))
-                    ->orderBy('payments.id','DESC')->get();
-            }else{
-                $payments = Payment::whereBetween('add_date',array($from_date,$to_date))->orderBy('payments.id','DESC')->get();
-            }
-            $flag = ucfirst($flag);
-
-            return view('assessments.generated_assessments')
-                ->with('title',$flag)->with('payments',$payments)->with('flag',$flag);
-        }catch (\Exception $exception){
-            $message = "An error has occurred,please contact System administrator";
-            GeneralController::exceptionHandler('Controller',$exception,'AssessmentController','filterAssessment','assessment-error');
-            return redirect()->back()->with('error-message',$message);
-        }
-    }
 
     public function getFileContent($attachmentId){
 
@@ -1695,9 +1672,12 @@ class AssessmentController extends Controller
                 $item_name = $fee->fee_name;
             }
 
+            $defineFeeAmount = $fee_item->defineFeeAmount;
+            $accountCode = $fee->account_code;
+
             return response()->json(['has_form'=>$has_form,'item_name'=>$item_name,'item_amount'=>$fee_item->item_amount,
                 'penalty_amount'=>$fee_item->penalty_amount,'currency'=>$fee_item->currency,
-                'days'=>$fee_item->days,'cp_charge'=>$fee_item->copy_charge,'success'=>1]);
+                'days'=>$fee_item->days,'cp_charge'=>$fee_item->copy_charge,'success'=>1,'defineFeeAmount'=>$defineFeeAmount,'accountCode'=>$accountCode]);
 
         }else{
             return response()->json(['success'=>2]);
@@ -1749,7 +1729,15 @@ class AssessmentController extends Controller
 
 
                 $account_code = $fee->account_code;
-                $item_amount = $fee_item->item_amount;
+
+
+                if ($fee_item->defineFeeAmount == 1){
+                    $item_amount = $item_amount;
+                }else{
+                    $item_amount = $fee_item->item_amount;
+                }
+
+                //$item_amount = $fee_item->item_amount;
                 $penalty = $fee_item->penalty_amount;
                 $currency = $fee_item->currency;
                 $days = $fee_item->days;
@@ -3285,8 +3273,27 @@ class AssessmentController extends Controller
 
 
                 }
-                else{//something else
+                elseif ($account_code == 440322){
 
+                    if ($has_form == 'yes'){
+
+                    }else{
+
+                        $total_amount = $item_amount;
+                        $penalty = $penalty;
+                        $currency = $currency;
+                        $days = $days;
+                        $copy_charges = $copy_charges;
+
+                    }
+
+                }
+                else{//something else
+                    $total_amount = 0;
+                    $penalty = 0;
+                    $currency = 'TZS';
+                    $days = 0;
+                    $copy_charges = 0;
                 }
 
 
@@ -3322,12 +3329,13 @@ class AssessmentController extends Controller
 
             }else{
                 //no fee record found
+                return response()->json(['success'=>12,'message'=>'No fee record was found']);
             }
 
 
         }else{
             //rhe item ID is not available,no reference found
-            return response()->json(['success'=>2]);
+            return response()->json(['success'=>2,'message'=>'The item ID is not available,no reference found']);
         }
 
 
@@ -3422,6 +3430,24 @@ class AssessmentController extends Controller
 
         }else{
             return \redirect()->to('new-assessment')->with('title','New assessment');
+        }
+
+    }
+
+    public function filterGeneratedAssessments(Request $request){
+
+        $flag = $request->flag;
+        $fromDate = $request->from_date;
+        $toDate = $request->to_date;
+
+        $payments = Payment::getAssessmentRecords($flag,$fromDate,$toDate);
+        $flag = ucfirst($flag);
+
+        if (strtolower($flag) == 'tmp'){
+            return view('assessment.assessment.temporary_assessments')->with('title',$flag)->with(compact('payments','flag'));
+        }else{
+            return view('assessment.assessment.generated_assessments')->with('title',$flag)->with(compact('payments','flag'));
+
         }
 
     }

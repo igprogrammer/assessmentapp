@@ -13,7 +13,7 @@ class Fee extends Model
     //guarded
     protected $guarded = ['id'];
 
-    public static function updateFee($feeId,$fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code,$isActive){
+    public static function updateFee($feeId,$fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code,$isActive,$defineFeeAmount){
         $fee = Fee::find($feeId);
         $fee->fee_account_id = $fee_account_id;
         $fee->fee_name = $fee_name;
@@ -25,12 +25,13 @@ class Fee extends Model
         $fee->gfs_code = $gfs_code;
         $fee->user_id = Auth::user()->id;
         $fee->active = $isActive;
+        $fee->defineFeeAmount = $defineFeeAmount;
         $fee->save();
 
         return $fee;
     }
 
-    public static function saveFee($fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code){
+    public static function saveFee($fee_account_id,$fee_name,$fee_code,$account_code,$amount,$has_form,$type,$gfs_code,$defineFeeAmount){
         $fee = new Fee();
         $fee->fee_account_id = $fee_account_id;
         $fee->fee_name = $fee_name;
@@ -41,6 +42,7 @@ class Fee extends Model
         $fee->type = $type;
         $fee->gfs_code = $gfs_code;
         $fee->user_id = Auth::user()->id;
+        $fee->defineFeeAmount = $defineFeeAmount;
         $fee->save();
 
         return $fee;

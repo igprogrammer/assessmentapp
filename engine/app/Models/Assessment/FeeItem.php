@@ -20,7 +20,7 @@ class FeeItem extends Model
         return $items;
     }
 
-    public static function updateFeeItem($feeItemId,$fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency){
+    public static function updateFeeItem($feeItemId,$fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency,$defineFeeAmount){
         $fee_item = FeeItem::find($feeItemId);
         $fee_item->fee_id = $fee_id;
         $fee_item->item_name = $item_name;
@@ -31,12 +31,13 @@ class FeeItem extends Model
         $fee_item->stamp_duty_amount = $stamp_duty_amount;
         $fee_item->currency = $currency;
         $fee_item->user_id = Auth::user()->id;
+        $fee_item->defineFeeAmount = $defineFeeAmount;
         $fee_item->save();
 
         return $fee_item;
     }
 
-    public static function saveFeeItem($fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency){
+    public static function saveFeeItem($fee_id,$item_name,$item_amount,$penalty_amount,$days,$copy_charge,$stamp_duty_amount,$currency,$defineFeeAmount){
         $fee_item = new FeeItem();
         $fee_item->fee_id = $fee_id;
         $fee_item->item_name = $item_name;
@@ -47,6 +48,7 @@ class FeeItem extends Model
         $fee_item->stamp_duty_amount = $stamp_duty_amount;
         $fee_item->currency = $currency;
         $fee_item->user_id = Auth::user()->id;
+        $fee_item->defineFeeAmount = $defineFeeAmount;
         $fee_item->save();
 
         return $fee_item;
