@@ -5,11 +5,54 @@ namespace App\Models\Payment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Payment extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
+
+    public static function getPaymentInfoByReference($reference){
+        return  DB::table('payments')->where(['reference'=>$reference])->first();
+
+    }
+
+    public static function getPaymentInfoByBookingId($bookingId){
+        return  DB::table('payments')->where(['bookingId'=>$bookingId])->first();
+    }
+
+    public static function updatePayment($paymentId,$invoice,$curr,$sc,$comma_separated,$flag,$phone_number,$exchange_rate,$expire_days,$expire_date,$billType,$bankName){
+
+        $data = DB::table('payment')->where(['reference'=>$invoice,'id'=>$paymentId])->first();
+        if (!empty($data)){
+
+            $payment = Payment::find($paymentId);
+
+            if (!empty($payment)){
+
+                $payment->section_id = $sc;
+                $payment->summary = $comma_separated;
+                $payment->booking_from = $flag;
+                $payment->re_assessment_from = null;
+                $payment->phone_number = $phone_number;
+                $payment->exchange_rate = $exchange_rate;
+                $payment->bl_exchange_rate = $exchange_rate;
+                $payment->expire_days = $expire_days;
+                $payment->expire_date = $expire_date;
+                $payment->billType = $billType;
+                $payment->transferBank = $bankName;
+                $payment->save();
+
+                return $payment;
+
+            }else{
+                return null;
+            }
+        }else{
+            return null;
+        }
+
+    }
 
     public static function savePayment($customer_id,$temp_payment_id,$total_amount,$account_code,$currency,$company_number,$invoice,$re_assessment_description){
 

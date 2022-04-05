@@ -9,7 +9,9 @@ use App\Models\Assessment\EventLog;
 use App\Models\Assessment\Fee;
 use App\Models\Assessment\FeeItem;
 use App\Models\Billing\Billing;
+use App\Models\Billing\BillPayOption;
 use App\Models\Booking\Booking;
+use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentFee;
 use Illuminate\Http\Request;
@@ -29,9 +31,9 @@ class BillingController extends Controller
             $message = " Successfully received Payment Control number";
             $status = 'Success';
 
-            $booking = Booking::getBookingInfoByReference($reference);
+            $payment = Payment::getPaymentInfoByReference($reference);
 
-            if (!empty($booking)){
+            if (!empty($payment)){
                 //update billing with the incoming control number
                 Billing::updateControlNumber($billId,$invoice);
             }
@@ -91,47 +93,41 @@ class BillingController extends Controller
     }
 
     public static function generateBill($invoice,$paymentId){
-        $booking_info = Booking::getBookingData($invoice);
-        $booking_id = $booking_info->booking_id;
+        $bookingInfo = Booking::getBookingData($invoice);
+        $bookingId = $bookingInfo->bookingId;
         $payment = Payment::find($paymentId);
 
         //Put GePG processes here
 
-        if(!empty($booking_info)){
+        if(!empty($bookingInfo)){
 
 
 
             //start GePG process
-            $bookingName = Booking::getInvoiceName($booking_id);
-            $name = $bookingName->name;
-            $section_id = $booking_info->section_id;
+            $customer = Customer::find($payment->customer_id);
+            $name = $customer->customer_name;
+            $section_id = $payment->section_id;
 
             /*========REPLACING APOSTROPHE WITH NONE EMPTY SPACE FOR PAYER NAME STARTS HERE*/
             $str=$name;
             $payer_name = str_replace("'", "", $str);
             /*========REPLACING APOSTROPHE WITH NONE EMPTY SPACE FOR PAYER NAME STARTS HERE*/
 
-            $SpCodeVar='SP135';
-            $SubSpCodeVar = '1001';
-            $SpSysIdVar='BRELA001';
-            $exchange_rate=$booking_info->exchange_rate;
+            $SpCodeVar = spCode();
+            $SubSpCodeVar = subSpCode();
+            $SpSysIdVar = spSysId();
+            $exchange_rate = $bookingInfo->exchange_rate;
 
-            $bill_eqv_amount = 0;
-            if($booking_info->currency == 'USD'){
-                $bill_eqv_amount = $booking_info->amount * $exchange_rate;
+            $billEqvAmount = 0;
+            if($bookingInfo->currency == 'USD'){
+                $billEqvAmount = $bookingInfo->amount * $exchange_rate;
             }else{
-                $bill_eqv_amount = $booking_info->amount;
+                $billEqvAmount = $bookingInfo->amount;
             }
 
-
-            /*==========start bill description=====*/
-            $invoice = $booking_info->invoice;
-            //select from payment
-
-            $payment = Payment::find($paymentId);
             $description = "BRELA Revenue";
-
-            /*==========end bill description=====*/
+            $billPayOptInfo = BillPayOption::getBillPayOpt();
+            $BillPayOpt = $billPayOptInfo->BillPayOpt ?? 3;
 
             header('Content-Type: application/xml');
             //Creates XML string and XML document using the DOM
@@ -147,17 +143,17 @@ class BillingController extends Controller
 
             $BillTrxInf = $gepgBillSubReq->appendChild($dom->createElement('BillTrxInf'));
             $BillId = $BillTrxInf->appendChild($dom->createElement('BillId'));
-            $BillId->appendChild($dom->createTextNode($booking_info->booking_id));
+            $BillId->appendChild($dom->createTextNode($bookingInfo->bookingId));
             $SubSpCode = $BillTrxInf->appendChild($dom->createElement('SubSpCode'));
             $SubSpCode->appendChild($dom->createTextNode($SubSpCodeVar));
             $SpSysId = $BillTrxInf->appendChild($dom->createElement('SpSysId'));
             $SpSysId->appendChild($dom->createTextNode($SpSysIdVar));
             $BillAmt = $BillTrxInf->appendChild($dom->createElement('BillAmt'));
-            $BillAmt->appendChild($dom->createTextNode($booking_info->amount));
+            $BillAmt->appendChild($dom->createTextNode($bookingInfo->amount));
             $MiscAmt = $BillTrxInf->appendChild($dom->createElement('MiscAmt'));
             $MiscAmt->appendChild($dom->createTextNode('0'));
             $BillExprDt = $BillTrxInf->appendChild($dom->createElement('BillExprDt'));
-            $BillExprDt->appendChild($dom->createTextNode(date("Y-m-d\TH:i:s", strtotime($booking_info->expire_date))));
+            $BillExprDt->appendChild($dom->createTextNode(date("Y-m-d\TH:i:s", strtotime($bookingInfo->expire_date))));
             $PyrId = $BillTrxInf->appendChild($dom->createElement('PyrId'));
             $PyrId->appendChild($dom->createTextNode($payer_name));
             $PyrName = $BillTrxInf->appendChild($dom->createElement('PyrName'));
@@ -165,33 +161,33 @@ class BillingController extends Controller
             $BillDesc = $BillTrxInf->appendChild($dom->createElement('BillDesc'));
             $BillDesc->appendChild($dom->createTextNode($description));
             $BillGenDt = $BillTrxInf->appendChild($dom->createElement('BillGenDt'));
-            $BillGenDt->appendChild($dom->createTextNode(date("Y-m-d\TH:i:s", strtotime($booking_info->book_date))));
+            $BillGenDt->appendChild($dom->createTextNode(date("Y-m-d\TH:i:s", strtotime($bookingInfo->book_date))));
             $BillGenBy = $BillTrxInf->appendChild($dom->createElement('BillGenBy'));
-            $BillGenBy->appendChild($dom->createTextNode($booking_info->booking_from));
+            $BillGenBy->appendChild($dom->createTextNode($bookingInfo->booking_from));
             $BillApprBy = $BillTrxInf->appendChild($dom->createElement('BillApprBy'));
-            $BillApprBy->appendChild($dom->createTextNode($booking_info->booking_from));
+            $BillApprBy->appendChild($dom->createTextNode($bookingInfo->booking_from));
             $PyrCellNum = $BillTrxInf->appendChild($dom->createElement('PyrCellNum'));
-            $PyrCellNum->appendChild($dom->createTextNode($booking_info->phone_number));
+            $PyrCellNum->appendChild($dom->createTextNode($bookingInfo->phone_number));
             $PyrEmail = $BillTrxInf->appendChild($dom->createElement('PyrEmail'));
             $PyrEmail->appendChild($dom->createTextNode('usajili@brela.go.tz'));
             $Ccy = $BillTrxInf->appendChild($dom->createElement('Ccy'));
-            $Ccy->appendChild($dom->createTextNode($booking_info->currency));
+            $Ccy->appendChild($dom->createTextNode($bookingInfo->currency));
             $BillEqvAmt = $BillTrxInf->appendChild($dom->createElement('BillEqvAmt'));
-            $BillEqvAmt->appendChild($dom->createTextNode($bill_eqv_amount));
+            $BillEqvAmt->appendChild($dom->createTextNode($billEqvAmount));
             $RemFlag = $BillTrxInf->appendChild($dom->createElement('RemFlag'));
             $RemFlag->appendChild($dom->createTextNode('true'));
             $BillPayOpt = $BillTrxInf->appendChild($dom->createElement('BillPayOpt'));
-            $BillPayOpt->appendChild($dom->createTextNode('3'));
+            $BillPayOpt->appendChild($dom->createTextNode($BillPayOpt));
             $BillItems = $BillTrxInf->appendChild($dom->createElement('BillItems'));
 
 
             //select from payment
-            $payment_fees = PaymentFee::where('payment_id','=',$paymentId)->get();
-            if (!empty($payment_fees)){
+            $paymentFees = PaymentFee::getPaymentItems($paymentId);
+            if (!empty($paymentFees)){
 
-                foreach ($payment_fees as $payment_fee){
+                foreach ($paymentFees as $paymentFee){
 
-                    $fee_item_id = $payment_fee->fee_item_id;
+                    $fee_item_id = $paymentFee->fee_item_id;
                     $fee_item = FeeItem::find($fee_item_id);
                     $fee = Fee::find($fee_item->fee_id);
 
@@ -199,23 +195,23 @@ class BillingController extends Controller
 
 
                     $bill_item_eqv_amount = 0;
-                    if($booking_info->currency == 'USD'){
-                        $bill_item_eqv_amount = $payment_fee->fee_amount * $exchange_rate;
+                    if($bookingInfo->currency == 'USD'){
+                        $billItemEqvAmount = $paymentFee->fee_amount * $exchange_rate;
                     }else{
-                        $bill_item_eqv_amount = $payment_fee->fee_amount;
+                        $billItemEqvAmount = $paymentFee->fee_amount;
                     }
 
                     $BillItem = $BillItems->appendChild($dom->createElement('BillItem'));
                     $BillItemRef = $BillItem->appendChild($dom->createElement('BillItemRef'));
-                    $BillItemRef->appendChild($dom->createTextNode($booking_info->invoice));
+                    $BillItemRef->appendChild($dom->createTextNode($bookingInfo->invoice));
                     $UseItemRefOnPay = $BillItem->appendChild($dom->createElement('UseItemRefOnPay'));
                     $UseItemRefOnPay->appendChild($dom->createTextNode('N'));
 
                     $BillItemAmt = $BillItem->appendChild($dom->createElement('BillItemAmt'));
-                    $BillItemAmt->appendChild($dom->createTextNode($payment_fee->fee_amount));
+                    $BillItemAmt->appendChild($dom->createTextNode($paymentFee->fee_amount));
 
                     $BillItemEqvAmt = $BillItem->appendChild($dom->createElement('BillItemEqvAmt'));
-                    $BillItemEqvAmt->appendChild($dom->createTextNode($bill_item_eqv_amount));
+                    $BillItemEqvAmt->appendChild($dom->createTextNode($billItemEqvAmount));
 
                     $BillItemMiscAmt = $BillItem->appendChild($dom->createElement('BillItemMiscAmt'));
                     $BillItemMiscAmt->appendChild($dom->createTextNode('0'));
@@ -237,14 +233,14 @@ class BillingController extends Controller
             $xml = $dom->saveXML();
 
             //update bill xml content
-            Billing::updateBill($booking_id,$payment->reference,$xml);
+            Billing::updateBill($bookingId,$payment->reference,$xml);
 
             //save the xml content into the OBRS database for references
-            Booking::saveBillContentToObrs($booking_id,$xml);
+            Booking::saveBillContent($bookingId,$xml);
 
 
-            //call the function to send bill vi assessment system which is connected to GePG
-            return self::sendBillContentToGePG(assessment_url(),$xml);
+            //call the function to listen to server and send bill to GePG
+            return self::sendBillContentToGePG(billRequestUrl(),$xml);
 
         }
 
@@ -258,7 +254,7 @@ class BillingController extends Controller
         $status = ServerListener::checkServerStatus($url);
 
         if (!$status){
-            $message = "The Assessment GePG server :".$url." is not reachable at the moment,please try again later or contact System administrator";
+            $message = "The GePG payment gateway :".$url." is not reachable at the moment,please try again later or contact System administrator";
             Log::channel('assessment-error')->info($message);
             $msg = "The Payment gateway is not reachable at the moment,please try again later or contact System administrator";
             EventLog::saveEvent(Auth::user()->username,'Billing','User',Auth::user()->name,'Fail','Request control number',$message,EventLog::getIpAddress(),EventLog::getMacAddress(),'BillingController','sendBillContentViaAssessmentSystem');
@@ -271,6 +267,7 @@ class BillingController extends Controller
         curl_setopt( $req, CURLOPT_URL, $url);
         curl_setopt( $req, CURLOPT_POST, true );
         curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml'));
+        curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml','Gepg-Com: default.sp.in','Gepg-Code:SP135'));
         curl_setopt( $req, CURLOPT_RETURNTRANSFER, true );
         curl_setopt( $req, CURLOPT_POSTFIELDS, "$billContent" );
 

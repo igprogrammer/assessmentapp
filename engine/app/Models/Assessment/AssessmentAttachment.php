@@ -9,6 +9,13 @@ class AssessmentAttachment extends Model
 {
     use HasFactory;
 
+    public static function updateAssessmentAttachment($temp_payment_id,$payment_id){
+        $attach = AssessmentAttachment::where(['temp_payment_id'=>$temp_payment_id])->first();
+        $attach->payment_id = $payment_id;
+        $attach->save();
+        return $attach;
+    }
+
     public static function checkAttachment($tempPaymentId){
         return AssessmentAttachment::where(['temp_payment_id'=>$tempPaymentId])->first();
     }

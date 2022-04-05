@@ -11,6 +11,10 @@ class PaymentFee extends Model
 {
     use HasFactory;
 
+    public static function getPaymentItems($paymentId){
+        return PaymentFee::where('payment_id','=',$paymentId)->get();
+    }
+
     public static function savePaymentItems($payment_id,$fee_item_id,$temp_payment_id,$fee_amount,$account_code,$fname,$fyear2,$fyear){
 
         $data = PaymentFee::where(['fee_item_id'=>$fee_item_id,'payment_id'=>$payment_id])->first();

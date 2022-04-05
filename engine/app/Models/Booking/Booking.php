@@ -10,13 +10,48 @@ class Booking extends Model
 {
     use HasFactory;
 
-    public static function saveBillContentToObrs($bookingId,$billContent){
+    public static function createBooking($bookingId,$reference){
+        $booking = Booking::where(['reference'=>$reference,'bookingId'=>$bookingId])->first();
+        if (empty($booking)){
+            $bookInfo = new Booking();
+            $bookInfo->bookingId = $bookingId;
+            $bookInfo->reference = $reference;
+            $bookInfo->save();
+        }else{
+            $bookInfo = $booking;
+        }
 
-        $check = DB::connection('pgsql')->table('send_gepg_contents')->where(['booking_id'=>$bookingId])->first();
+        return $bookInfo;
+    }
+
+    public static function incrementBookingId($bookingId){
+        DB::table('bookings')->where([]);
+    }
+
+    public static function getLastBooking(){
+        $id = Booking::max('id');
+        if ($id != null){
+            $booking = Booking::find($id);
+            if (!empty($booking)){
+                $bookingId = $booking->bookingId;
+            }else{
+                $bookingId = 0;
+            }
+        }else{
+            $bookingId = 0;
+        }
+
+        return $bookingId;
+
+    }
+
+    public static function saveBillContent($bookingId,$billContent){
+
+        $check = DB::table('send_gepg_contents')->where(['bookingId'=>$bookingId])->first();
         if (empty($check)){
-            DB::connection('pgsql')->table('send_gepg_contents')->insert(array(
-                'booking_id'=>$bookingId,
-                'xml_content'=>$billContent
+            DB::table('send_gepg_contents')->insert(array(
+                'bookingId'=>$bookingId,
+                'xmlContent'=>$billContent
             ));
         }
 
@@ -32,12 +67,16 @@ class Booking extends Model
 
     }
 
-    public static function getInvoiceName($booking_id){
+    /*public static function getInvoiceName($booking_id){
         return DB::connection('pgsql')->table('brela_invoice')->select()->where('booking_id',$booking_id)->first();
+    }*/
+
+    public static function getInvoiceName($bookingId){
+        return DB::table('customers')->select()->where('booking_id',$booking_id)->first();
     }
 
     public static function getBookingData($invoice){
-        return DB::connection('pgsql')->table('booking')->select()->where('reference',$invoice)->first();
+        return DB::table('payments')->select()->where('reference',$invoice)->first();
     }
 
     public static function saveBrelaInvoice($booking_id,$company_name){

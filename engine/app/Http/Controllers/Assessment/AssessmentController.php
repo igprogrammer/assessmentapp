@@ -218,6 +218,17 @@ class AssessmentController extends Controller
         return  $invoice;
     }
 
+    function generateRandomNumbers($length = 10){
+        $characters = '0123456789098765432101234567890';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        $invoice = substr(time(),-1).substr(strtoupper($randomString), -5);
+        return  $invoice;
+    }
+
     //save assessment
     public function saveAssessment(Request $request){
 
@@ -316,32 +327,26 @@ class AssessmentController extends Controller
                     $sc=4;
                 }elseif($accnt_code == 440341){
                     $sc=5;
-                }elseif($accnt_code == 440300){
+                }elseif($accnt_code == 440342){
                     $sc=6;
+                }
+                elseif($accnt_code == 440350 || $accnt_code == 440300){
+                    $sc=7;
                 }
                 elseif($accnt_code == 440343){
                     $sc=8;
                 }
-                elseif($accnt_code == 440350){
-                    $sc=6;
-                }
-                elseif($accnt_code == 440342){
-                    $sc=7;
-                }
+
 
             }
 
             //get the exchange rate
-            $exr_max_id = ExchangeRate::max('id');
-            if (!empty($exr_max_id)){
-                $exchange_rate_info = ExchangeRate::find($exr_max_id);
-            }
+            $exchange_rate_info = ExchangeRate::getExchangeRate();
 
-
-            if ($sc == 7){
-                $exchange_rate = $exchange_rate_info->bl_exchange_rate;
-            }else{
+            if (!empty($exchange_rate_info)){
                 $exchange_rate = $exchange_rate_info->exchange_rate;
+            }else{
+                $exchange_rate = 2250;
             }
 
 
@@ -359,33 +364,14 @@ class AssessmentController extends Controller
                         $expire_days = 7;
                     }
 
-                    $invoice = substr($temp_payment->account_code, -2) . $this->generateRandomString();
+                    $invoice = substr($temp_payment->account_code, -2) . $this->generateRandomNumbers();
 
                     $booking_date = date('Y-m-d H:i:s');
                     $expire_days = $expire_days;
                     $expire_date = date("Y-m-d H:i:s", strtotime($booking_date . '+ ' . $expire_days . ' days'));
 
-                    if($re_assessment == 're_assessment'){
-                        $status=1;
-                        $re_assessment_description = $_POST['re_assessment_description'];
-                    }else{
-                        $re_assessment_description = '';
-                        $status=0;
-                    }
-
-                    $curr = 'TZS';
-
-                    if ($temp_payment->currency =='US $') {
-                        $curr='USD';
-                    }
-
-
-
-                    if($re_assessment == 're_assessment'){
-                        $flag = 'B_O';
-                    }else{
-                        $flag = 'BRELA';
-                    }
+                    $curr = $temp_payment->currency ?? 'TZS';
+                    $flag = 'BRELA';
 
 
 
@@ -401,6 +387,8 @@ class AssessmentController extends Controller
                             $customer_id = $check_customer->id;
                         }
 
+                        $re_assessment_description = null;
+
                         //create new entry in the payments table
                         $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
                             $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description);
@@ -412,9 +400,7 @@ class AssessmentController extends Controller
                         /**
                          * update attachment table with payment_id
                          */
-                        $attach = AssessmentAttachment::where(['temp_payment_id'=>$temp_payment_id])->first();
-                        $attach->payment_id = $payment_id;
-                        $attach->save();
+                        $attach = AssessmentAttachment::updateAssessmentAttachment($temp_payment_id,$payment_id);
 
                         //get items
                         $temp_items = TempItem::where('temp_payment_id','=',$temp_payment_id)->get();
@@ -457,23 +443,20 @@ class AssessmentController extends Controller
                         $temp_pay->save();
 
 
-                        //create entries in obrs
+                        //update payment entries
+                        $paymentInfo = Payment::updatePayment($total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$temp_payment->phone_number,$exchange_rate,$expire_days,$expire_date,'normal','National Microfinance Bank');
 
-                        Booking::saveOBRSInvoice($total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$temp_payment->phone_number,$exchange_rate,$expire_days,$expire_date,'normal','National Microfinance Bank');
+                        //get last booking id
+                        $bookingId = Booking::getLastBooking();
 
+                        //create new booking record
+                        $bookingId = $bookingId + 1;
+                        $bookingInfo = Booking::createBooking($bookingId, $payment->reference);
 
-                        $booking_info = Booking::getBookingData($invoice);
-                        $booking_id = $booking_info->booking_id;
-
-                        $check_booking_invoice = Booking::getInvoiceName($booking_id);
-                        if (empty($check_booking_invoice)){
-                            Booking::saveBrelaInvoice($booking_id,$temp_payment->company_name);
-                        }
+                        $bookingId = $bookingInfo->bookingId;
 
                         //save local bill
-                        $bill = Billing::saveBill($total_amount,$curr,$company_number,$booking_id);
-
-                        //End OBRS saving
+                        $bill = Billing::saveBill($total_amount,$curr,$company_number,$bookingId);
 
                         //Start GePG processing here
 
@@ -490,26 +473,30 @@ class AssessmentController extends Controller
 
                         /*End GePG content*/
 
+                        //sleep the process for 5 seconds to allow GePG processing
+                        sleep(5);
+
                         //call function to save and update control number
-                        $booking = Booking::getBookingInfoByReference($payment->reference);
-                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$booking->invoice,$bill->billId);
+                        $payment = Payment::getPaymentInfoByBookingId($bookingId);
+                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$payment->invoice,$bill->billId);
                         //DB::commit();
 
                         $result = $data->getData()->result;
                         $message = $data->getData()->message;
                         $status = $data->getData()->status;
 
-                        //sleep the process for 5 seconds to allow GePG processing
-                        if ($tempStatus == 2){
-                            $message = Auth::user()->name.$message." for entity number: ".$company_number;
+                        if (/*$tempStatus == 2*/ $result == 1){
+                            $message = Auth::user()->name.' '.$message." for entity number: ".$company_number;
                         }else{
-                            $message = Auth::user()->name.$message." number for entity number: ".$company_number;
+                            $message = Auth::user()->name.' '.$message." number for entity number: ".$company_number;
                         }
+
+
 
                         Log::channel('assessment')->info($message);
                         EventLog::saveEvent(Auth::user()->email,'System access','User', Auth::user()->name,$status,'Generate invoice',
                             $message,EventLog::getIpAddress(),EventLog::getMacAddress(),'AssessmentController','saveAssessment');
-                        sleep(5);
+                        sleep(1);
 
                         return response()->json(['success'=>$result,'message'=>$message,'payment_id'=>encrypt($payment_id)]);
                         return Redirect::route('continue-assessment', array('payment_id' => encrypt($payment_id)));
@@ -517,7 +504,7 @@ class AssessmentController extends Controller
 
                     }else{
                         $message = 'Already accessed';
-                        return response()->json(['success'=>0,'message'=>$message]);
+                        return response()->json(['success'=>0,'message'=>$message,'payment_id'=>$check_payment->id]);
                         return redirect()->back()->with('title','New assessment')->with('error-message',$message);
                     }
                 }else{
@@ -534,7 +521,7 @@ class AssessmentController extends Controller
             //DB::rollBack();
             $message = "An error has occurred,please contact System administrator";
             GeneralController::exceptionHandler('Controller',$exception,'AssessmentController','saveAssessment','assessment-error');
-            return response()->json(['success'=>0,'message'=>$exception->getMessage()]);
+            return response()->json(['success'=>0,'message'=>$message]);
             return redirect()->back()->with('error-message',$message);
         }
 

@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('num', function (){
+    $length = 10;
+    $characters = '0123456789098765432101234567890';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    $invoice = substr(time(),-1).substr(strtoupper($randomString), -5);
+    return  $invoice;
+});
+
 Route::get('items', function (){
 
     $items = \App\Models\Assessment\Fee::all();

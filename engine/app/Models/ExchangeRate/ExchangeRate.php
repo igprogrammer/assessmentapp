@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class ExchangeRate extends Model
 {
     use HasFactory;
+
+    public static function getExchangeRate(){
+        return ExchangeRate::first();
+    }
 }

@@ -12,3 +12,26 @@ function assessment_way_url(){
 function assessment_url(){
     return config('customurl.assessment_url');
 }
+
+
+
+
+function spCode(){
+    return config('customurl.sp_code');
+}
+
+function subSpCode(){
+    return config('customurl.sub_sp_code');
+}
+
+function spSysId(){
+    return config('customurl.sp_sys_id');
+}
+
+function billRequestUrl(){
+    return config('customurl.bill_request_url');
+}
+
+function paymentNotificationUrl(){
+    return config('customurl.payment_notification_url');
+}
