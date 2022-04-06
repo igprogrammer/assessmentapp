@@ -397,7 +397,7 @@ class AssessmentController extends Controller
 
                         //create new entry in the payments table
                         $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
-                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId);
+                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId,$temp_payment->calculationType,$temp_payment->licenceType);
 
                         //return payment id
                         $payment_id = $payment->id;
@@ -450,7 +450,7 @@ class AssessmentController extends Controller
 
 
                         //update payment entries
-                        $paymentInfo = Payment::updatePayment($total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$temp_payment->phone_number,$exchange_rate,$expire_days,$expire_date,'normal','National Microfinance Bank');
+                        $paymentInfo = Payment::updatePayment($payment_id,$total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$temp_payment->phone_number,$exchange_rate,$expire_days,$expire_date,'normal','National Microfinance Bank');
 
 
                         $bookingInfo = Booking::createBooking($bookingId, $payment->reference);
@@ -458,7 +458,7 @@ class AssessmentController extends Controller
                         $bookingId = $bookingInfo->bookingId;
 
                         //save local bill
-                        $bill = Billing::saveBill($total_amount,$curr,$company_number,$bookingId);
+                        $bill = Billing::saveBill($total_amount,$curr,$company_number,$bookingId,$payment->reference);
 
                         //Start GePG processing here
 

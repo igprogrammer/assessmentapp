@@ -47,10 +47,10 @@ class Booking extends Model
 
     public static function saveBillContent($bookingId,$billContent){
 
-        $check = DB::table('send_gepg_contents')->where(['bookingId'=>$bookingId])->first();
+        $check = DB::table('send_gepg_contents')->where(['billId'=>$bookingId])->first();
         if (empty($check)){
             DB::table('send_gepg_contents')->insert(array(
-                'bookingId'=>$bookingId,
+                'billId'=>$bookingId,
                 'xmlContent'=>$billContent
             ));
         }

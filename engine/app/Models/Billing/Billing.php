@@ -44,7 +44,7 @@ class Billing extends Model
         }
     }
 
-    public static function saveBill($billAmount,$currency,$entityNo,$bookingId){
+    public static function saveBill($billAmount,$currency,$entityNo,$bookingId,$reference){
 
         $check = Billing::where(['bookingId'=>$bookingId])->first();
         if (empty($check)){
@@ -55,6 +55,7 @@ class Billing extends Model
             $billing->year = date('Y',strtotime(date('Y-m-d')));
             $billing->entityNo = $entityNo;
             $billing->bookingId = $bookingId;
+            $billing->reference = $reference;
             $billing->save();
         }else{
             $billing = $check;

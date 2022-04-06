@@ -121,14 +121,14 @@ class BillingController extends Controller
 
             $billEqvAmount = 0;
             if($bookingInfo->currency == 'USD'){
-                $billEqvAmount = $bookingInfo->amount * $exchange_rate;
+                $billEqvAmount = $bookingInfo->billAmount * $exchange_rate;
             }else{
-                $billEqvAmount = $bookingInfo->amount;
+                $billEqvAmount = $bookingInfo->billAmount;
             }
 
             $description = "BRELA Revenue";
             $billPayOptInfo = BillPayOption::getBillPayOpt();
-            $BillPayOpt = $billPayOptInfo->BillPayOpt ?? 3;
+            $payOpt = $billPayOptInfo->BillPayOpt ?? 3;
 
             header('Content-Type: application/xml');
             //Creates XML string and XML document using the DOM
@@ -150,7 +150,7 @@ class BillingController extends Controller
             $SpSysId = $BillTrxInf->appendChild($dom->createElement('SpSysId'));
             $SpSysId->appendChild($dom->createTextNode($SpSysIdVar));
             $BillAmt = $BillTrxInf->appendChild($dom->createElement('BillAmt'));
-            $BillAmt->appendChild($dom->createTextNode($bookingInfo->amount));
+            $BillAmt->appendChild($dom->createTextNode($bookingInfo->billAmount));
             $MiscAmt = $BillTrxInf->appendChild($dom->createElement('MiscAmt'));
             $MiscAmt->appendChild($dom->createTextNode('0'));
             $BillExprDt = $BillTrxInf->appendChild($dom->createElement('BillExprDt'));
@@ -178,7 +178,7 @@ class BillingController extends Controller
             $RemFlag = $BillTrxInf->appendChild($dom->createElement('RemFlag'));
             $RemFlag->appendChild($dom->createTextNode('true'));
             $BillPayOpt = $BillTrxInf->appendChild($dom->createElement('BillPayOpt'));
-            $BillPayOpt->appendChild($dom->createTextNode($BillPayOpt));
+            $BillPayOpt->appendChild($dom->createTextNode($payOpt));
             $BillItems = $BillTrxInf->appendChild($dom->createElement('BillItems'));
 
 
