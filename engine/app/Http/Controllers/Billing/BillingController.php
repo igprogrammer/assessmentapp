@@ -12,6 +12,7 @@ use App\Models\Billing\Billing;
 use App\Models\Billing\BillPayOption;
 use App\Models\Booking\Booking;
 use App\Models\Customer\Customer;
+use App\Models\GepgBillResponse;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentFee;
 use Illuminate\Http\Request;
@@ -240,7 +241,7 @@ class BillingController extends Controller
 
 
             //call the function to listen to server and send bill to GePG
-            return self::sendBillContentToGePG(billRequestUrl(),$xml);
+            return self::sendBillContentToGePG(billRequestUrl(),$xml,$bookingId);
 
         }
 
@@ -249,7 +250,7 @@ class BillingController extends Controller
 
 
 
-    public static function sendBillContentToGePG($url,$billContent){
+    public static function sendBillContentToGePG($url,$billContent,$bookingId){
 
         $status = ServerListener::checkServerStatus($url);
 
@@ -272,6 +273,9 @@ class BillingController extends Controller
         curl_setopt( $req, CURLOPT_POSTFIELDS, "$billContent" );
 
         $result = curl_exec($req);
+
+        //save the xml response into the database for references
+        GepgBillResponse::saveGepgBillResponse($bookingId,$result);
 
         /*============= acknowledge to GePG that the request is Okay===============*/
         $response_array = array('7101'=>'trxStsCode');
