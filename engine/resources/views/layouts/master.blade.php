@@ -500,6 +500,15 @@
                                        }
                                    })
 
+                               }else if (data.success == 3){
+
+                                   bootbox.alert({
+                                       message: data.message,
+                                       callback: function () {
+                                           window.location.reload(true);
+                                       }
+                                   })
+
                                }
                                else{
 

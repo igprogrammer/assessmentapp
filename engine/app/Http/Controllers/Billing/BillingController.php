@@ -26,7 +26,7 @@ class BillingController extends Controller
         $this->middleware('auth');
     }
 
-    public function receiveAndUpdateBillControlNumber($response,$reference=null,$invoice=null,$billId=null){
+    public function receiveAndUpdateBillControlNumber($response,$reference=null,$invoice=null,$billId=null,$message=null){
         if ($response == 1){
             $result = 1;
             $message = " Successfully received Payment Control number";
@@ -41,6 +41,10 @@ class BillingController extends Controller
         }elseif ($response == 0){
             $result = 0;
             $message = " Failed to generate and receive Payment Control number";
+            $status = 'Fail';
+        }elseif ($response == 3){
+            $result = 3;
+            $message = $message;
             $status = 'Fail';
         }else{
             $result = 0;
@@ -70,7 +74,7 @@ class BillingController extends Controller
 
             //call function to save and update control number
             $booking = Booking::getBookingInfoByReference($payment->reference);
-            $data = self::receiveAndUpdateBillControlNumber($response,$payment->reference,$booking->invoice,$bill->billId);
+            $data = self::receiveAndUpdateBillControlNumber($response,$payment->reference,$booking->invoice,$bill->billId,$message);
 
             $result = $data->getData()->result;
             $message = $data->getData()->message;
@@ -259,7 +263,7 @@ class BillingController extends Controller
             Log::channel('assessment-error')->info($message);
             $msg = "The Payment gateway is not reachable at the moment,please try again later or contact System administrator";
             EventLog::saveEvent(Auth::user()->username,'Billing','User',Auth::user()->name,'Fail','Request control number',$message,EventLog::getIpAddress(),EventLog::getMacAddress(),'BillingController','sendBillContentViaAssessmentSystem');
-            return response()->json(['result'=>0,'message'=>$msg]);
+            return response()->json(['result'=>3,'message'=>$msg]);
         }
 
         //$billUrl = $url.'receive-bo-bill';

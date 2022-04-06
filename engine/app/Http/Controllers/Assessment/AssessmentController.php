@@ -480,7 +480,7 @@ class AssessmentController extends Controller
 
                         //call function to save and update control number
                         $payment = Payment::getPaymentInfoByBookingId($bookingId);
-                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$payment->invoice,$bill->billId);
+                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$payment->invoice,$bill->billId,$message);
                         //DB::commit();
 
                         $result = $data->getData()->result;
@@ -489,8 +489,10 @@ class AssessmentController extends Controller
 
                         if (/*$tempStatus == 2*/ $result == 1){
                             $message = Auth::user()->name.' '.$message." for entity number: ".$company_number;
+                        }elseif ($result == 3){
+                            $message == $message;
                         }else{
-                            $message = Auth::user()->name.' '.$message." number for entity number: ".$company_number;
+                            $message = Auth::user()->name.' '.$message." for entity number: ".$company_number;
                         }
 
 
