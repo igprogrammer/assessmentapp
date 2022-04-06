@@ -26,7 +26,7 @@ class BillingController extends Controller
         $this->middleware('auth');
     }
 
-    public function receiveAndUpdateBillControlNumber($response,$reference=null,$invoice=null,$billId=null,$message=null){
+    public static function receiveAndUpdateBillControlNumber($response,$reference=null,$invoice=null,$billId=null,$message=null){
         if ($response == 1){
             $result = 1;
             $message = " Successfully received Payment Control number";
@@ -55,7 +55,7 @@ class BillingController extends Controller
         return response()->json(['result'=>$result,'message'=>$message,'status'=>$status]);
     }
 
-    public function requestControlNumber(Request $request){
+    public static function requestControlNumber(Request $request){
 
         try {
             $paymentId = $request->paymentId;
