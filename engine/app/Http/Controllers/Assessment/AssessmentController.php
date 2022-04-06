@@ -480,7 +480,7 @@ class AssessmentController extends Controller
 
                         //call function to save and update control number
                         $payment = Payment::getPaymentInfoByBookingId($bookingId);
-                        $data = BillingController::recei($response,$payment->reference,$payment->invoice,$bill->billId,$message);
+                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$payment->invoice,$bill->billId,$message);
                         //DB::commit();
 
                         $result = $data->getData()->result;
