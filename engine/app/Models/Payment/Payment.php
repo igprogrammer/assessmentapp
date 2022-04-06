@@ -2,6 +2,7 @@
 
 namespace App\Models\Payment;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,58 @@ class Payment extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
+
+    public static function updatePaymentReceiptNumber($bookingId,$receiptNumber){
+        DB::table('payments')->where(['bookingId'=>$bookingId])->update(array(
+            'receiptNo'=>$receiptNumber
+        ));
+    }
+
+    public static function markPaymentAsReceived($bookingId,$amount,$payDate,$bankName,$phoneNumber,
+                                                 $bankTransactionId,$mobileTransactionId,$paymentMethod,$PayRefId,$TrxStsCode,$PspReceiptNumber,$payMonth,$payYear){
+
+        DB::table('payments')->where(['bookingId'=>$bookingId])->update(array(
+            'isPaid'=>1,
+            'payDate'=>$payDate,
+            'bankName'=>$bankName,
+            'payPhoneNumber'=>$phoneNumber,
+            'amountPaid' => $amount,
+            'bank_transaction_id'=>$bankTransactionId,
+            'mobile_transaction_id'=>$mobileTransactionId,
+            'bank_account_number'=>$bankName,
+            'method'=>$paymentMethod,
+            'payrefid'=>$PayRefId,
+            'PspReceiptNumber'=>$PspReceiptNumber,
+            'gepgStatus'=>$TrxStsCode,
+            'payMonth'=>$payMonth,
+            'payYear'=>$payYear,
+            'paymentEntryDate'=>Carbon::now('Africa/Dar_es_Salaam')));
+
+    }
+
+    public static function checkPaymentCompleted($bookingId){
+        return DB::table('payments')->where(['bookingId'=>$bookingId,'isPaid'=>1]);
+    }
+
+    public static function updateControlNumber($bookingId,$controlNumber){
+
+        $check = Payment::getPaymentInfoByBookingId($bookingId);
+        if (!empty($check)){
+            $pay = Payment::find($check->id);
+            $pay->controlNumber = $controlNumber;
+            $pay->invoice = $controlNumber;
+            $pay->save();
+        }else{
+            $pay = $check;
+        }
+
+        return $pay;
+
+        /*DB::table('payments')->where(['bookingId'=>$bookingId])->update(array(
+            'controlNumber'=>$controlNumber,
+            'invoice'=>$controlNumber
+        ));*/
+    }
 
     public static function getPaymentInfoByReference($reference){
         return  DB::table('payments')->where(['reference'=>$reference])->first();
@@ -54,15 +107,16 @@ class Payment extends Model
 
     }
 
-    public static function savePayment($customer_id,$temp_payment_id,$total_amount,$account_code,$currency,$company_number,$invoice,$re_assessment_description){
+    public static function savePayment($customer_id,$temp_payment_id,$total_amount,$account_code,$currency,$company_number,$invoice,$re_assessment_description,$bookingId){
 
         $data = Payment::where(['temp_payment_id'=>$temp_payment_id])->first();
         if (empty($data)){
             $payment = new Payment();
+            $payment->bookingId = $bookingId;
             $payment->user_id = Auth::user()->id;
             $payment->customer_id =$customer_id;
             $payment->temp_payment_id = $temp_payment_id;
-            $payment->amount = $total_amount;
+            $payment->billAmount = $total_amount;
             $payment->cheque_amount = '';
             $payment->payment_type = 'Cash';
             $payment->cheque_amount = '';

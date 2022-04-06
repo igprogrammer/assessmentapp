@@ -15,11 +15,11 @@ class CreateIncomingControlNumbersTable extends Migration
     {
         Schema::create('incoming_control_numbers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->text('xml_content')->nullable();
+            $table->text('xmlContent')->nullable();
             $table->bigInteger('billId')->nullable();
-            $table->dateTime('posted_on')->nullable();
-            $table->string('receive_message')->nullable();
-            $table->string('response_message')->nullable();
+            $table->dateTime('postedOn')->nullable();
+            $table->string('receiveMessage')->nullable();
+            $table->string('responseMessage')->nullable();
             $table->boolean('status')->default(0);
             $table->timestamps();
         });

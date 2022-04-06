@@ -123,6 +123,18 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+        'sqlsrv_recon' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST_RECON', 'localhost'),
+            'port' => env('DB_PORT_RECON', '1433'),
+            'database' => env('DB_DATABASE_RECON', 'forge'),
+            'username' => env('DB_USERNAME_RECON', 'forge'),
+            'password' => env('DB_PASSWORD_RECON', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
 
     ],
 

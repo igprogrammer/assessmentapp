@@ -389,9 +389,15 @@ class AssessmentController extends Controller
 
                         $re_assessment_description = null;
 
+                        //get last booking id
+                        $bookingId = Booking::getLastBooking();
+
+                        //create new booking record
+                        $bookingId = $bookingId + 1;
+
                         //create new entry in the payments table
                         $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
-                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description);
+                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId);
 
                         //return payment id
                         $payment_id = $payment->id;
@@ -446,11 +452,7 @@ class AssessmentController extends Controller
                         //update payment entries
                         $paymentInfo = Payment::updatePayment($total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$temp_payment->phone_number,$exchange_rate,$expire_days,$expire_date,'normal','National Microfinance Bank');
 
-                        //get last booking id
-                        $bookingId = Booking::getLastBooking();
 
-                        //create new booking record
-                        $bookingId = $bookingId + 1;
                         $bookingInfo = Booking::createBooking($bookingId, $payment->reference);
 
                         $bookingId = $bookingInfo->bookingId;

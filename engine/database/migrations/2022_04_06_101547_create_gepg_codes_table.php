@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateGepgBillResponsesTable extends Migration
+class CreateGepgCodesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,12 @@ class CreateGepgBillResponsesTable extends Migration
      */
     public function up()
     {
-        Schema::create('gepg_bill_responses', function (Blueprint $table) {
+        Schema::create('gepg_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('billId')->nullable();
-            $table->text('responseContent')->nullable();
-            $table->dateTime('postedOn')->nullable();
+            $table->bigInteger('BillId')->nullable();
+            $table->string('PayCntrNum')->nullable();
+            $table->string('TrxSts')->nullable();
+            $table->string('TrxStsCode')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +30,6 @@ class CreateGepgBillResponsesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('gepg_bill_responses');
+        Schema::dropIfExists('gepg_codes');
     }
 }

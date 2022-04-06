@@ -119,6 +119,12 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
         ],
+        'generate-receipt' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payments/generate-receipt.log'),
+            'level' => 'debug',
+            'days' => 14,
+        ],
 
         'slack' => [
             'driver' => 'slack',

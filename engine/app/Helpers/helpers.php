@@ -35,3 +35,7 @@ function billRequestUrl(){
 function paymentNotificationUrl(){
     return config('customurl.payment_notification_url');
 }
+
+function reconRequestUrl(){
+    return config('custom_url.recon_request_url');
+}

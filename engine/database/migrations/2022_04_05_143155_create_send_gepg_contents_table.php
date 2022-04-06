@@ -15,7 +15,7 @@ class CreateSendGepgContentsTable extends Migration
     {
         Schema::create('send_gepg_contents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('bookingId')->nullable();
+            $table->bigInteger('billId')->nullable();
             $table->text('xmlContent')->nullable();
             $table->timestamps();
         });

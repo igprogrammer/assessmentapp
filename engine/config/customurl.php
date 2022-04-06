@@ -9,6 +9,7 @@ return
 
         'bill_request_url'=>env('BILL_REQUEST_URL'),
         'payment_notification_url'=>env('PAYMENT_NOTIFICATION_URL'),
+        'recon_request_url'=>env('RECON_REQUEST_URL'),
 
         'sp_code'=> env('SP_CODE'),
         'sub_sp_code'=>env('SUB_SP_CODE'),

@@ -55,9 +55,6 @@ Route::get('items', function (){
 
 });
 
-
-
-
 Route::get('bls', function (){
     $types = \Illuminate\Support\Facades\DB::connection('mysql_b')->table('tnbp_eadvisory_category')
         ->where(['status'=>0])->get();
@@ -114,6 +111,14 @@ Route::get('bls', function (){
 
     dd(count($apps). ' items loaded');
 });
+
+
+
+Route::post('get-recon-data', array('as'=>'get-recon-data','uses'=>'PaymentController@receiveReconRequest'));
+Route::post('receive-recon-request', array('as'=>'receive-recon-request','uses'=>'PaymentController@receiveReconRequest'));
+Route::post('receive-bo-bill', array('as'=>'receive-bo-bill','uses'=>'PaymentController@receive_bo_bill'));
+Route::post('receive-payment', array('as'=>'receive-payment','uses'=>'PaymentController@payment'));
+Route::post('bill-request-response',[\App\Http\Controllers\BillPayment\BillAndPaymentController::class,'receiveBillRequestResponse']);
 
 
 Route::group(['prefix'=>'assessments'], function (){

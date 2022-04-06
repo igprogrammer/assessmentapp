@@ -15,9 +15,9 @@ class CreateIncomingPaymentsTable extends Migration
     {
         Schema::create('incoming_payments', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->text('xml_content')->nullable();
+            $table->text('xmlContent')->nullable();
             $table->bigInteger('billId')->nullable();
-            $table->dateTime('posted_on')->nullable();
+            $table->dateTime('postedOn')->nullable();
             $table->string('TrxId')->nullable();
             $table->string('SpCode')->nullable();
             $table->string('PayRefId')->nullable();
