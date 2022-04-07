@@ -12,6 +12,10 @@ class TempPayment extends Model
 {
     use HasFactory;
 
+    public static function getPendingTempAssessmentByCompanyNumber($companyNumber){
+        return TempPayment::where(['company_number'=>$companyNumber,'status'=>0])->first();
+    }
+
     public static function getTempPaymentInfo($id){
         return TempPayment::where('id','=',$id)->whereIn('status',array(0,2))->first();
     }

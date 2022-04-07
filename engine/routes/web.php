@@ -14,6 +14,29 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('xml', function (){
+    $data = \App\Models\SendGepgContent::find(8);
+    $content = $data->xmlContent;
+    $response = BillingController::isXMLContentValid($content,$version = '1.0', $encoding = 'utf-8');
+    dd($response);
+});
+
+Route::get('bill', function (){
+    $data = BillingController::generateBill(31035844,7);
+    dd($data);
+});
+
+
+Route::get('signed', function (){
+
+    $d= \App\Models\SendGepgContent::first();
+    $xml = $d->xmlContent;
+
+    $data = BillingController::signedRequest($xml,3);
+    dd($data);
+});
+
+
 Route::get('num', function (){
     $length = 10;
     $characters = '0123456789098765432101234567890';

@@ -117,6 +117,7 @@
       <path value="$PROJECT_DIR$/engine/vendor/dasprid/enum" />
       <path value="$PROJECT_DIR$/engine/vendor/simplesoftwareio/simple-qrcode" />
       <path value="$PROJECT_DIR$/engine/vendor/bacon/bacon-qr-code" />
+      <path value="$PROJECT_DIR$/engine/vendor/spatie/array-to-xml" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.3" />

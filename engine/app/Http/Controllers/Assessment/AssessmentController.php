@@ -240,15 +240,27 @@ class AssessmentController extends Controller
             $tempStatus = $request->tempStatus;
             $company_number = $request->company_number;
 
+            $checkTempPay = TempPayment::getPendingTempAssessmentByCompanyNumber($company_number);
+
 
             $re_assessment = $request->re_assessment;
             $checkAttachment = AssessmentAttachment::checkAttachment($temp_payment_id);
 
             if ($tempStatus == 0 || empty($checkAttachment)){
                 if (empty($request->file('assessment_form_file'))){
-                    return response()->json(['success'=>0,'message'=>'Please attach assessment form']);
+                    return response()->json(['success'=>4,'message'=>'Please attach assessment form']);
                     //return \redirect()->back()->with('error-message','Please attach assessment form');
                 }
+            }
+
+
+            if (empty($checkTempPay)){
+                return response()->json(['success'=>5,'message'=>'Please make assessment before requesting control number']);
+            }
+
+            $checkItems = TempItem::getTempItems($checkTempPay->id);
+            if (empty($checkItems)){
+                return response()->json(['success'=>5,'message'=>'Please add fee items before requesting control number']);
             }
 
 
@@ -289,6 +301,39 @@ class AssessmentController extends Controller
                     }
                 }
             }
+            else{
+
+                if (!empty($assessment_form_file)){
+
+                    $extension = $assessment_form_file->getClientOriginalExtension();
+                    if (strtolower($extension) == 'png' || strtolower($extension) == 'jpg' || strtolower($extension) == 'jpeg' || strtolower($extension) == 'pdf'){
+
+                        // SET UPLOAD PATH
+
+                        if (!File::isDirectory(storage_path().'/'.'app/assessment_attachments'.'/'.$company_number)){
+                            File::makeDirectory(storage_path().'/'.'app/assessment_attachments'.'/'.$company_number,0777,true);
+                        }
+
+
+                        $destinationPath = storage_path().'/'.'app/assessment_attachments'.'/'.$company_number;//getClientOriginalExtension
+                        // GET THE FILE EXTENSION
+                        $extension = $assessment_form_file->getClientOriginalExtension();
+
+                        $fileName = date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
+                        // MOVE THE UPLOADED FILES TO THE DESTINATION DIRECTORY
+                        $upload_success = $assessment_form_file->move($destinationPath, $fileName);
+
+
+                        $filePath = date('YmdHis').'_'.$assessment_form_file->getClientOriginalName();
+                        $mimeType = $assessment_form_file->getClientMimeType();
+                        $fileName = $assessment_form_file->getClientOriginalName();
+                        AssessmentAttachment::updateAttachmentFile($temp_payment_id,$filePath,$mimeType,$fileName,$extension);
+
+
+                    }
+                }
+
+            }
 
             /*End assessment attachment*/
 
@@ -300,7 +345,7 @@ class AssessmentController extends Controller
                 if (!empty($tempPayment)){
                     TempPayment::updateTempStatus($temp_payment_id,$tempStatus);
                 }
-                DB::commit();
+                //DB::commit();
                 if ($tempStatus == 2){
                     $message = 'Assessment has been successfully forwarded to supervisor before invoice generation';
                 }elseif ($tempStatus == 3){
@@ -397,7 +442,8 @@ class AssessmentController extends Controller
 
                         //create new entry in the payments table
                         $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
-                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId,$temp_payment->calculationType,$temp_payment->licenceType);
+                            $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId,
+                            $temp_payment->calculationType,$temp_payment->licenceType,$temp_payment->phone_number);
 
                         //return payment id
                         $payment_id = $payment->id;
@@ -410,6 +456,7 @@ class AssessmentController extends Controller
 
                         //get items
                         $temp_items = TempItem::where('temp_payment_id','=',$temp_payment_id)->get();
+                        $smd = array();
                         if (!empty($temp_items)){
                             foreach ($temp_items as $temp_item){
                                 //add entries in the payments table

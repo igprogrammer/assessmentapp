@@ -20,6 +20,19 @@ class AssessmentAttachment extends Model
         return AssessmentAttachment::where(['temp_payment_id'=>$tempPaymentId])->first();
     }
 
+    public static function updateAttachmentFile($temp_payment_id,$filePath,$mimeType,$fileName,$extension){
+        $attach = AssessmentAttachment::where(['temp_payment_id'=>$temp_payment_id])->first();
+        if (!empty($attach)){
+            $attach->file_path = $filePath;
+            $attach->mime = $mimeType;
+            $attach->file_name = $fileName;
+            $attach->extension = $extension;
+            $attach->save();
+            return $attach;
+        }
+
+    }
+
     public static function saveAttachment($temp_payment_id,$filePath,$mimeType,$file_name,$extension){
         //$path = 'report_attachments/'.$fileName;
         $attachment = new AssessmentAttachment();

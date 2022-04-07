@@ -14,6 +14,9 @@ return
         'sp_code'=> env('SP_CODE'),
         'sub_sp_code'=>env('SUB_SP_CODE'),
         'sp_sys_id'=>env('SP_SYS_ID'),
+        'key_store'=>env('KEY_STORE'),
+        'pub_key'=>env('PUB_KEY'),
+        'pri_key'=>env('PRI_KEY'),
 
 
     ];

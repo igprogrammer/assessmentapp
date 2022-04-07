@@ -74,7 +74,7 @@ class Payment extends Model
         return  DB::table('payments')->where(['bookingId'=>$bookingId])->first();
     }
 
-    public static function updatePayment($paymentId,$invoice,$curr,$sc,$comma_separated,$flag,$phone_number,$exchange_rate,$expire_days,$expire_date,$billType,$bankName){
+    public static function updatePayment($paymentId,$total_amount,$invoice,$curr,$sc,$comma_separated,$flag,$phone_number,$exchange_rate,$expire_days,$expire_date,$billType,$bankName){
 
         $data = DB::table('payments')->where(['reference'=>$invoice,'id'=>$paymentId])->first();
         if (!empty($data)){
@@ -108,7 +108,7 @@ class Payment extends Model
     }
 
     public static function savePayment($customer_id,$temp_payment_id,$total_amount,$account_code,$currency,$company_number,
-                                       $invoice,$re_assessment_description,$bookingId,$calculationType,$licenceType){
+                                       $invoice,$re_assessment_description,$bookingId,$calculationType,$licenceType,$billPhoneNumber){
 
         $data = Payment::where(['temp_payment_id'=>$temp_payment_id])->first();
         if (empty($data)){
@@ -135,6 +135,7 @@ class Payment extends Model
             $payment->add_date = date('Y-m-d');
             $payment->calculationType = $calculationType;
             $payment->licenceType = $licenceType;
+            $payment->phone_number = $billPhoneNumber;
             $payment->save();
         }else{
             $payment = $data;

@@ -39,3 +39,14 @@ function paymentNotificationUrl(){
 function reconRequestUrl(){
     return config('custom_url.recon_request_url');
 }
+
+function keyStore(){
+    return config('customurl.key_store');
+}
+function pubKey(){
+    return config('customurl.pub_key');
+}
+
+function privKey(){
+    return config('customurl.pri_key');
+}

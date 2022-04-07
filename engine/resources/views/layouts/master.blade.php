@@ -509,6 +509,16 @@
                                        }
                                    })
 
+                               }else if (data.success == 4){//no attachment
+
+                                   bootbox.alert(data.message);
+                                   return false;
+
+                               }else if (data.success == 5){//no temp items
+
+                                   bootbox.alert(data.message);
+                                   return false;
+
                                }
                                else{
 

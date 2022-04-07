@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Billing;
 
+use App\Helpers\JsonToArrayConverter;
 use App\Helpers\ServerListener;
 use App\Http\Controllers\Assessment\GeneralController;
 use App\Http\Controllers\Controller;
+use App\Models\Assessment\ErrorsLog;
 use App\Models\Assessment\EventLog;
 use App\Models\Assessment\Fee;
 use App\Models\Assessment\FeeItem;
@@ -19,6 +21,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Spatie\ArrayToXml\ArrayToXml;
+use function App\Http\Controllers\getDataString;
+use function App\Http\Controllers\getSignatureString;
 
 class BillingController extends Controller
 {
@@ -134,59 +139,8 @@ class BillingController extends Controller
             $billPayOptInfo = BillPayOption::getBillPayOpt();
             $payOpt = $billPayOptInfo->BillPayOpt ?? 3;
 
-            header('Content-Type: application/xml');
-            //Creates XML string and XML document using the DOM
 
-            $dom = new \DOMDocument('1.0');
-            $gepgBillSubReq = $dom->appendChild($dom->createElement('gepgBillSubReq'));
-            $BillHdr = $gepgBillSubReq->appendChild($dom->createElement('BillHdr'));
-
-            $SpCode = $BillHdr->appendChild($dom->createElement('SpCode'));
-            $SpCode->appendChild($dom->createTextNode($SpCodeVar));
-            $RtrRespFlg = $BillHdr->appendChild($dom->createElement('RtrRespFlg'));
-            $RtrRespFlg->appendChild($dom->createTextNode('true'));
-
-            $BillTrxInf = $gepgBillSubReq->appendChild($dom->createElement('BillTrxInf'));
-            $BillId = $BillTrxInf->appendChild($dom->createElement('BillId'));
-            $BillId->appendChild($dom->createTextNode($bookingInfo->bookingId));
-            $SubSpCode = $BillTrxInf->appendChild($dom->createElement('SubSpCode'));
-            $SubSpCode->appendChild($dom->createTextNode($SubSpCodeVar));
-            $SpSysId = $BillTrxInf->appendChild($dom->createElement('SpSysId'));
-            $SpSysId->appendChild($dom->createTextNode($SpSysIdVar));
-            $BillAmt = $BillTrxInf->appendChild($dom->createElement('BillAmt'));
-            $BillAmt->appendChild($dom->createTextNode($bookingInfo->billAmount));
-            $MiscAmt = $BillTrxInf->appendChild($dom->createElement('MiscAmt'));
-            $MiscAmt->appendChild($dom->createTextNode('0'));
-            $BillExprDt = $BillTrxInf->appendChild($dom->createElement('BillExprDt'));
-            $BillExprDt->appendChild($dom->createTextNode(date("Y-m-d\TH:i:s", strtotime($bookingInfo->expire_date))));
-            $PyrId = $BillTrxInf->appendChild($dom->createElement('PyrId'));
-            $PyrId->appendChild($dom->createTextNode($payer_name));
-            $PyrName = $BillTrxInf->appendChild($dom->createElement('PyrName'));
-            $PyrName->appendChild($dom->createTextNode($payer_name));
-            $BillDesc = $BillTrxInf->appendChild($dom->createElement('BillDesc'));
-            $BillDesc->appendChild($dom->createTextNode($description));
-            $BillGenDt = $BillTrxInf->appendChild($dom->createElement('BillGenDt'));
-            $BillGenDt->appendChild($dom->createTextNode(date("Y-m-d\TH:i:s", strtotime($bookingInfo->book_date))));
-            $BillGenBy = $BillTrxInf->appendChild($dom->createElement('BillGenBy'));
-            $BillGenBy->appendChild($dom->createTextNode($bookingInfo->booking_from));
-            $BillApprBy = $BillTrxInf->appendChild($dom->createElement('BillApprBy'));
-            $BillApprBy->appendChild($dom->createTextNode($bookingInfo->booking_from));
-            $PyrCellNum = $BillTrxInf->appendChild($dom->createElement('PyrCellNum'));
-            $PyrCellNum->appendChild($dom->createTextNode($bookingInfo->phone_number));
-            $PyrEmail = $BillTrxInf->appendChild($dom->createElement('PyrEmail'));
-            $PyrEmail->appendChild($dom->createTextNode('usajili@brela.go.tz'));
-            $Ccy = $BillTrxInf->appendChild($dom->createElement('Ccy'));
-            $Ccy->appendChild($dom->createTextNode($bookingInfo->currency));
-            $BillEqvAmt = $BillTrxInf->appendChild($dom->createElement('BillEqvAmt'));
-            $BillEqvAmt->appendChild($dom->createTextNode($billEqvAmount));
-            $RemFlag = $BillTrxInf->appendChild($dom->createElement('RemFlag'));
-            $RemFlag->appendChild($dom->createTextNode('true'));
-            $BillPayOpt = $BillTrxInf->appendChild($dom->createElement('BillPayOpt'));
-            $BillPayOpt->appendChild($dom->createTextNode($payOpt));
-            $BillItems = $BillTrxInf->appendChild($dom->createElement('BillItems'));
-
-
-            //select from payment
+            $repo = [];
             $paymentFees = PaymentFee::getPaymentItems($paymentId);
             if (!empty($paymentFees)){
 
@@ -199,31 +153,26 @@ class BillingController extends Controller
                     $gfs_code = $fee->gfs_code;
 
 
-                    $bill_item_eqv_amount = 0;
+                    $billItemEqvAmount = 0;
                     if($bookingInfo->currency == 'USD'){
                         $billItemEqvAmount = $paymentFee->fee_amount * $exchange_rate;
                     }else{
                         $billItemEqvAmount = $paymentFee->fee_amount;
                     }
 
-                    $BillItem = $BillItems->appendChild($dom->createElement('BillItem'));
-                    $BillItemRef = $BillItem->appendChild($dom->createElement('BillItemRef'));
-                    $BillItemRef->appendChild($dom->createTextNode($bookingInfo->invoice));
-                    $UseItemRefOnPay = $BillItem->appendChild($dom->createElement('UseItemRefOnPay'));
-                    $UseItemRefOnPay->appendChild($dom->createTextNode('N'));
 
-                    $BillItemAmt = $BillItem->appendChild($dom->createElement('BillItemAmt'));
-                    $BillItemAmt->appendChild($dom->createTextNode($paymentFee->fee_amount));
+                    $data = [
+                        'BillItem'=>[
+                            'BillItemRef'=>$bookingInfo->invoice,
+                            'UseItemRefOnPay'=>'N',
+                            'BillItemAmt'=>$paymentFee->fee_amount,
+                            'BillItemEqvAmt'=>$billItemEqvAmount,
+                            'BillItemMiscAmt'=>0,
+                            'GfsCode'=>$gfs_code
+                        ]
+                    ];
 
-                    $BillItemEqvAmt = $BillItem->appendChild($dom->createElement('BillItemEqvAmt'));
-                    $BillItemEqvAmt->appendChild($dom->createTextNode($billItemEqvAmount));
-
-                    $BillItemMiscAmt = $BillItem->appendChild($dom->createElement('BillItemMiscAmt'));
-                    $BillItemMiscAmt->appendChild($dom->createTextNode('0'));
-                    $GfsCode = $BillItem->appendChild($dom->createElement('GfsCode'));
-                    $GfsCode->appendChild($dom->createTextNode($gfs_code));
-
-
+                    array_push($repo,$data);
 
                 }
 
@@ -231,21 +180,37 @@ class BillingController extends Controller
 
             }
 
-            //generate xml
-            $dom->formatOutput = true; // set the formatOutput attribute of
-            // domDocument to true
-            // save XML as string or file
-            $xml = $dom->saveXML();
+            $dataArray = [
+                'BillHdr'=>[
+                    'SpCode'=>$SpCodeVar,
+                    'RtrRespFlg'=>true
+                ],
+                'BillTrxInf'=>[
+                    'BillId'=>$bookingInfo->bookingId,
+                    'SubSpCode'=>$SubSpCodeVar,
+                    'SpSysId'=>$SpSysIdVar,
+                    'BillAmt'=>$bookingInfo->billAmount,
+                    'MiscAmt'=>0,
+                    'BillExprDt'=>date("Y-m-d\TH:i:s", strtotime($bookingInfo->expire_date)),
+                    'PyrId'=>$payer_name,
+                    'PyrName'=>$payer_name,
+                    'BillDesc'=>$description,
+                    'BillGenDt'=>date("Y-m-d\TH:i:s", strtotime($bookingInfo->book_date)),
+                    'BillGenBy'=>$bookingInfo->booking_from,
+                    'BillApprBy'=>$bookingInfo->booking_from,
+                    'PyrCellNum'=>$bookingInfo->phone_number,
+                    'PyrEmail'=>'usajili@brela.go.tz',
+                    'Ccy'=>$bookingInfo->currency,
+                    'BillEqvAmt'=>$billEqvAmount,
+                    'RemFlag'=>true,
+                    'BillPayOpt'=>$payOpt,
+                    'BillItems'=>$repo
+                ]
+            ];
 
-            //update bill xml content
-            Billing::updateBill($bookingId,$payment->reference,$xml);
-
-            //save the xml content into the OBRS database for references
-            Booking::saveBillContent($bookingId,$xml);
-
-
-            //call the function to listen to server and send bill to GePG
-            return self::sendBillContentToGePG(billRequestUrl(),$xml,$bookingId);
+            //call the function to listen to server,sign bill and send to GePG
+            $requestType = 'bill';
+            return self::sendBillContentToGePG(billRequestUrl(),$dataArray,$bookingId,$payment->reference,$requestType);
 
         }
 
@@ -254,7 +219,17 @@ class BillingController extends Controller
 
 
 
-    public static function sendBillContentToGePG($url,$billContent,$bookingId){
+    public static function sendBillContentToGePG($url,$billContent,$bookingId=null,$reference=null,$requestType=null,$reconRequestId=null){
+
+
+        //return signed xml content
+        $billContent = self::signedRequest($billContent,$bookingId,$requestType);
+
+        //update bill xml content
+        Billing::updateBill($bookingId,$reference,$billContent);
+
+        //save the xml content into the database for references
+        Booking::saveBillContent($bookingId,$billContent);
 
         $status = ServerListener::checkServerStatus($url);
 
@@ -270,35 +245,92 @@ class BillingController extends Controller
 
         $req = curl_init();
         curl_setopt( $req, CURLOPT_URL, $url);
+        curl_setopt($req, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt( $req, CURLOPT_POST, true );
-        curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml'));
-        curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml','Gepg-Com: default.sp.in','Gepg-Code:SP135'));
         curl_setopt( $req, CURLOPT_RETURNTRANSFER, true );
         curl_setopt( $req, CURLOPT_POSTFIELDS, "$billContent" );
+        curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml','Gepg-Com: default.sp.in','Gepg-Code:SP116'));
+        curl_setopt($req, CURLOPT_TIMEOUT, 50);
+        curl_setopt($req, CURLOPT_CONNECTTIMEOUT, 50);
 
-        $result = curl_exec($req);
+        //Capture returned content from GePG
+        $requestResponse = curl_exec($req);
 
-        //save the xml response into the database for references
-        GepgBillResponse::saveGepgBillResponse($bookingId,$result);
+        //Tag for response
 
-        /*============= acknowledge to GePG that the request is Okay===============*/
-        $response_array = array('7101'=>'trxStsCode');
-        $xml = new \SimpleXMLElement('<gepgBillSubRespAck/>');
-        array_walk_recursive($response_array, array ($xml, 'addChild'));
-        echo $xmldata =  explode("\n",$xml->asXML(),2)[1];
+        if ($requestType == 'bill'){
+            $datatag = "gepgBillSubReqAck";
+            $sigtag = "gepgSignature";
+            $bookingId = $bookingId;
+            $reconRequestId = null;
+            $ackData = '<gepgBillSubRespAck/>';
+        }elseif ($requestType == 'recon'){
+            $datatag = "gepgReconSubReqAck";
+            $sigtag = "gepgSignature";
+            $bookingId = null;
+            $reconRequestId = $reconRequestId;
+            $ackData = '<gepgSpReconcRespAck/>';
+        }
 
-        /*==============end ack to GePG==============================*/
+        if (!empty($requestResponse)){
 
-        curl_close($req);
+            $vdata = self::getDataString($requestResponse,$datatag);
+            $vsignature = self::getSignatureString($requestResponse,$sigtag);
 
-        $res = simplexml_load_string($result);
-        $json = json_encode($res);//parse the string to json
+            //save the xml response into the database for references
+            $response = GepgBillResponse::saveGepgBillResponse($bookingId,$requestResponse,$vdata,$vsignature,$requestType,$reconRequestId);
+            $billResponseId = $response->id;
 
-        $res = json_decode($json,true);//convert the json to a php array variable
+            /*============= acknowledge to GePG that the request is Okay===============*/
+            $response_array = array('7101'=>'trxStsCode');
+            $xml = new \SimpleXMLElement($ackData);
+            array_walk_recursive($response_array, array ($xml, 'addChild'));
+            $xmldata =  explode("\n",$xml->asXML(),2)[1];
+            echo $xmldata;
 
-        if ($res['trxStsCode'] == '7101'){
-            $result = 1;
-            $message = 'Success received control number from GePG';
+            /*==============end ack to GePG==============================*/
+
+            curl_close($req);
+
+            $pubData = self::readPublicKeyStore($vdata,$vsignature);
+            $status = $pubData->getData()->status;
+            $message = $pubData->getData()->message;
+
+            //update response table
+            GepgBillResponse::updateGepgBillResponse($billResponseId,$status,$message);
+
+
+
+        }else{
+
+            /*============= acknowledge to GePG that the request is Okay===============*/
+            $response_array = array('7101'=>'trxStsCode');
+            $xml = new \SimpleXMLElement($ackData);
+            array_walk_recursive($response_array, array ($xml, 'addChild'));
+            $xmldata =  explode("\n",$xml->asXML(),2)[1];
+            echo $xmldata;
+
+            /*==============end ack to GePG==============================*/
+
+        }
+
+        $response = self::isXMLContentValid($requestResponse,$version = '1.0', $encoding = 'utf-8');
+
+        if ($response == true){
+
+            $res = simplexml_load_string($requestResponse);
+            $json = json_encode($res);//parse the string to json
+
+            $res = json_decode($json,true);//convert the json to a php array variable
+
+            if ($res['trxStsCode'] == '7101'){
+                $result = 1;
+                $message = 'Success received control number from GePG';
+            }else{
+                $result = 0;
+                $message = 'Failed to received control number from GePG';
+            }
+
         }else{
             $result = 0;
             $message = 'Failed to received control number from GePG';
@@ -307,6 +339,146 @@ class BillingController extends Controller
         return response()->json(['result'=>$result,'message'=>$message]);
 
 
+    }
+
+    public static function readPublicKeyStore($vdata,$vsignature){
+
+        $readMessage = null;
+        if (!$pcert_store = file_get_contents(pubKey())) {
+            $message = "Error: Unable to read the public certificate file";
+            $status = 201;
+            return response()->json(['status'=>$status,'message'=>$message]);
+        }
+        else{
+
+            //Read Certificate
+            if (openssl_pkcs12_read($pcert_store,$pcert_info,"passpass")) {
+
+                //Decode Received Signature String
+                $rawsignature = base64_decode($vsignature);
+
+                //Verify Signature and state whether signature is okay or not
+                $ok = openssl_verify($vdata, $rawsignature, $pcert_info['extracerts']['0']);
+                if ($ok == 1) {
+                    $signatureMessageStatus = "The signature is Good";
+                    $status = 1;
+                } elseif ($ok == 0) {
+                    $signatureMessageStatus = "The signature is Bad";
+                    $status = 0;
+                } else {
+                    $signatureMessageStatus = "UGLY, Error checking signature";
+                    $status = 0;
+                }
+
+            }else{
+                $signatureMessageStatus = "Failed to read the public certificate store";
+                $status = 0;
+            }
+
+            return response()->json(['status'=>0,'message'=>$signatureMessageStatus]);
+
+
+        }
+
+
+
+    }
+
+    public static function signedRequest($billContent,$bookingId,$requestType){
+
+        $readMessage = null;
+
+        if (!$cert_store = file_get_contents(privKey())) {
+            $readMessage = "Error: Failed to read the certificate file for bill ID: ".$bookingId;
+            ErrorsLog::saveGeneralError($readMessage,$bookingId);
+            echo $readMessage;
+            exit;
+        }else{
+
+
+            if (openssl_pkcs12_read($cert_store,$cert_info,"passpass")){
+
+                //convert array content to xml
+                $billContent = ArrayToXml::convert($billContent);
+
+                //create signature
+                openssl_sign($billContent, $signature, $cert_info['pkey'], "sha1WithRSAEncryption");
+
+                //output crypted data base64 encoded
+                $signature = base64_encode($signature);
+
+                //convert the xml to array
+                $simpleXml = simplexml_load_string($billContent);
+                $json = json_encode($simpleXml);//parse the string to json
+
+                $billContent = json_decode($json,true);//convert the json to a php array variable
+
+                if ($requestType == 'bill'){
+                    $arrayContent = [
+                        'gepgBillSubReq'=>$billContent,
+                        'gepgSignature'=>$signature
+                    ];
+                }elseif ($requestType == 'recon'){
+                    $arrayContent = [
+                        'gepgSpReconcReq'=>$billContent,
+                        'gepgSignature'=>$signature
+                    ];
+                }
+
+
+                //convert array to xml
+                $xmlContent = ArrayToXml::convert($arrayContent);
+                $xml = str_replace('root','Gepg',$xmlContent);
+                return $xml;
+            }else{
+                $readMessage = "Error: Unable to read the certificate store for booking ID: ".$bookingId;
+                ErrorsLog::saveGeneralError($readMessage,$bookingId);
+                echo $readMessage;
+                exit;
+            }
+
+
+        }
+
+
+    }
+
+    function getDataString($inputstr,$datatag){
+        $datastartpos = strpos($inputstr, $datatag);
+        $dataendpos = strrpos($inputstr, $datatag);
+        $data=substr($inputstr,$datastartpos - 1,$dataendpos + strlen($datatag)+2 - $datastartpos);
+        return $data;
+    }
+
+    function getSignatureString($inputstr,$sigtag){
+        $sigstartpos = strpos($inputstr, $sigtag);
+        $sigendpos = strrpos($inputstr, $sigtag);
+        $signature=substr($inputstr,$sigstartpos + strlen($sigtag)+1,$sigendpos - $sigstartpos -strlen($sigtag)-3);
+        return $signature;
+    }
+
+
+    public static function isXMLFileValid($xmlFilename, $version = '1.0', $encoding = 'utf-8'){
+        $xmlContent = file_get_contents($xmlFilename);
+        return self::isXMLContentValid($xmlContent, $version, $encoding);
+    }
+
+    public function isXMLContentValid($xmlContent, $version = '1.0', $encoding = 'utf-8')
+    {
+
+        if (trim($xmlContent) == '') {
+            return false;
+        }
+
+        libxml_use_internal_errors(true);
+
+        $doc = new \DOMDocument($version, $encoding);
+        $doc->loadXML($xmlContent);
+
+        $errors = libxml_get_errors();
+        libxml_clear_errors();
+
+        return empty($errors);
     }
 
 }

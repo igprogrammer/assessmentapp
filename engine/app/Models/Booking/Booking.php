@@ -2,6 +2,7 @@
 
 namespace App\Models\Booking;
 
+use App\Models\SendGepgContent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -49,10 +50,15 @@ class Booking extends Model
 
         $check = DB::table('send_gepg_contents')->where(['billId'=>$bookingId])->first();
         if (empty($check)){
-            DB::table('send_gepg_contents')->insert(array(
-                'billId'=>$bookingId,
-                'xmlContent'=>$billContent
-            ));
+
+            $bill = new SendGepgContent();
+            $bill->billId = $bookingId;
+            $bill->xmlContent = $billContent;
+            $bill->save();
+        }else{
+            $bill = SendGepgContent::find($check->id);
+            $bill->xmlContent = $billContent;
+            $bill->save();
         }
 
     }
