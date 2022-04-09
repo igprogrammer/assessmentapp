@@ -37,10 +37,16 @@
                             </b>
                         </td>
                         <td>
+                            <input type="text" class="form-control" name="controlNumber" onkeyup="search_entity()" id="controlNumber" placeholder="Search by control number">
+                        </td>
+                        <td>
                             <input type="text" class="form-control" name="entityNumber" onkeyup="search_entity()" id="entityNumber" placeholder="Search by number">
                         </td>
                         <td>
                             <input type="text" class="form-control" name="entityName" onkeyup="search_entity()" id="entityName" placeholder="Search by name">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" name="reference" onkeyup="search_entity()" id="reference" placeholder="Search by reference number">
                         </td>
                     </tr>
                 </table>
@@ -77,8 +83,10 @@
 
 
         function search_entity(){
+            var controlNumber = document.getElementById('controlNumber').value;
             var entityName = document.getElementById('entityName').value;
             var entityNumber = document.getElementById('entityNumber').value;
+            var reference = document.getElementById('reference').value;
             var flag = '<?php echo $flag; ?>'
 
             if(window.XMLHttpRequest) {
@@ -94,9 +102,74 @@
                     document.getElementById('assessment-details').innerHTML = data;
                 }
             }; //specify name of function that will handle server response........
-            myObject.open('GET','{{ URL::route("search-assessment") }}?flag='+flag+'&entityName='+entityName+'&entityNumber='+entityNumber,true);
+            myObject.open('GET','{{ URL::route("search-assessment") }}?reference='+reference+'&controlNumber='+controlNumber+'&flag='+flag+'&entityName='+entityName+'&entityNumber='+entityNumber,true);
             myObject.send();
         }
+
+
+        function reRequestControlNumber(payment_id){
+
+
+            bootbox.dialog({
+                closeButton: false,
+                message: "Are you sure you want re-generate control number for payment?",
+                title: "Confirm request Control number",
+                buttons: {
+                    danger: {
+                        label: "&nbsp;&nbsp;&nbsp;&nbsp; Yes &nbsp;&nbsp;&nbsp;&nbsp;",
+                        className: "btn-danger",
+                        callback: function() {
+
+
+                            $('.loading').css('display','block');
+                            $('a[href]').on('click', function(event) { event.preventDefault(); });
+
+
+                            if(window.XMLHttpRequest) {
+                                myObject = new XMLHttpRequest();
+                            }else if(window.ActiveXObject){
+                                myObject = new ActiveXObject('Micrsoft.XMLHTTP');
+                                myObject.overrideMimeType('text/xml');
+                            }
+
+                            myObject.onreadystatechange = function (){
+                                data = myObject.responseText;
+                                var response = JSON.parse(data);
+                                if (myObject.readyState == 4) {
+                                    $('.loading').css('display','none');
+
+                                    bootbox.alert({
+                                        message: response.message,
+                                        callback: function () {
+                                            window.location.reload(true)
+                                        }
+                                    })
+
+                                }
+                            };
+
+                            myObject.open('GET','{{ url('assessments/re-request-control-number') }}?paymentId='+payment_id,true);
+                            myObject.send();
+
+
+                        }
+                    },
+                    main: {
+                        label: "&nbsp;&nbsp;&nbsp;&nbsp; No &nbsp;&nbsp;&nbsp;&nbsp;",
+                        className: "btn-primary",
+                        callback: function() {
+                            return true;
+                        }
+                    }
+                }
+            });
+
+
+
+        }
+
+
+
     </script>
 
 

@@ -31,6 +31,10 @@ class BillingController extends Controller
         $this->middleware('auth');
     }
 
+    public static function reqCn(Request $request){
+        dd($request->paymentId);
+    }
+
     public static function receiveAndUpdateBillControlNumber($response,$reference=null,$invoice=null,$billId=null,$message=null){
         if ($response == 1){
             $result = 1;
@@ -63,7 +67,8 @@ class BillingController extends Controller
     public static function requestControlNumber(Request $request){
 
         try {
-            $paymentId = $request->paymentId;
+            $paymentId = decrypt($request->paymentId);
+            $message = "Failed to get control number from GePG";
 
             $payment = Payment::find($paymentId);
             $bill = Billing::getBill($payment->reference);
@@ -72,6 +77,8 @@ class BillingController extends Controller
                 $data = BillingController::generateBill($bill->reference,$paymentId);
                 $response = $data->getData()->result;
                 $message = $data->getData()->message;
+
+                //$response = BillingController::generateBill($bill->reference,$paymentId);
 
             }else{
                 $response = 2;
@@ -217,8 +224,6 @@ class BillingController extends Controller
         /*End GePG content*/
     }
 
-
-
     public static function sendBillContentToGePG($url,$billContent,$bookingId=null,$reference=null,$requestType=null,$reconRequestId=null){
 
 
@@ -241,78 +246,17 @@ class BillingController extends Controller
             return response()->json(['result'=>3,'message'=>$msg]);
         }
 
-        //$billUrl = $url.'receive-bo-bill';
+        $url = $url.'receive-bill';
 
         $req = curl_init();
         curl_setopt( $req, CURLOPT_URL, $url);
-        curl_setopt($req, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt( $req, CURLOPT_POST, true );
         curl_setopt( $req, CURLOPT_RETURNTRANSFER, true );
         curl_setopt( $req, CURLOPT_POSTFIELDS, "$billContent" );
-        curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml','Gepg-Com: default.sp.in','Gepg-Code:SP116'));
-        curl_setopt($req, CURLOPT_TIMEOUT, 50);
-        curl_setopt($req, CURLOPT_CONNECTTIMEOUT, 50);
+        curl_setopt( $req, CURLOPT_HTTPHEADER, array('Content-Type: application/xml'));
 
-        //Capture returned content from GePG
+        //Capture returned content from local gateway to GePG
         $requestResponse = curl_exec($req);
-
-        //Tag for response
-
-        if ($requestType == 'bill'){
-            $datatag = "gepgBillSubReqAck";
-            $sigtag = "gepgSignature";
-            $bookingId = $bookingId;
-            $reconRequestId = null;
-            $ackData = '<gepgBillSubRespAck/>';
-        }elseif ($requestType == 'recon'){
-            $datatag = "gepgReconSubReqAck";
-            $sigtag = "gepgSignature";
-            $bookingId = null;
-            $reconRequestId = $reconRequestId;
-            $ackData = '<gepgSpReconcRespAck/>';
-        }
-
-        if (!empty($requestResponse)){
-
-            $vdata = self::getDataString($requestResponse,$datatag);
-            $vsignature = self::getSignatureString($requestResponse,$sigtag);
-
-            //save the xml response into the database for references
-            $response = GepgBillResponse::saveGepgBillResponse($bookingId,$requestResponse,$vdata,$vsignature,$requestType,$reconRequestId);
-            $billResponseId = $response->id;
-
-            /*============= acknowledge to GePG that the request is Okay===============*/
-            $response_array = array('7101'=>'trxStsCode');
-            $xml = new \SimpleXMLElement($ackData);
-            array_walk_recursive($response_array, array ($xml, 'addChild'));
-            $xmldata =  explode("\n",$xml->asXML(),2)[1];
-            echo $xmldata;
-
-            /*==============end ack to GePG==============================*/
-
-            curl_close($req);
-
-            $pubData = self::readPublicKeyStore($vdata,$vsignature);
-            $status = $pubData->getData()->status;
-            $message = $pubData->getData()->message;
-
-            //update response table
-            GepgBillResponse::updateGepgBillResponse($billResponseId,$status,$message);
-
-
-
-        }else{
-
-            /*============= acknowledge to GePG that the request is Okay===============*/
-            $response_array = array('7101'=>'trxStsCode');
-            $xml = new \SimpleXMLElement($ackData);
-            array_walk_recursive($response_array, array ($xml, 'addChild'));
-            $xmldata =  explode("\n",$xml->asXML(),2)[1];
-            echo $xmldata;
-
-            /*==============end ack to GePG==============================*/
-
-        }
 
         $response = self::isXMLContentValid($requestResponse,$version = '1.0', $encoding = 'utf-8');
 

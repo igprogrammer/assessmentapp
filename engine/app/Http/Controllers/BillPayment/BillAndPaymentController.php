@@ -305,18 +305,18 @@ class BillAndPaymentController extends Controller
 
             }else{
 
-                //save incoming control number
-                IncomingControlNumber::saveIncomingControlNumber($data,$message,$bookingId);
-
-                //save gepg response codes
-                GepgCode::saveCodeResponse($bookingId,$PayCntrNum,$TrxSts,$TrxStsCode);
-
                 /*============= acknowledge to GePG that the control number has been received===============*/
                 $response_array = array('7101'=>'TrxStsCode');
                 $xml = new SimpleXMLElement('<gepgBillSubRespAck/>');
                 array_walk_recursive($response_array, array ($xml, 'addChild'));
                 echo $xmldata =  explode("\n",$xml->asXML(),2)[1];
                 /*==============end ack to GePG==============================*/
+
+                //save incoming control number
+                IncomingControlNumber::saveIncomingControlNumber($data,$message,$bookingId);
+
+                //save gepg response codes
+                GepgCode::saveCodeResponse($bookingId,$PayCntrNum,$TrxSts,$TrxStsCode);
 
             }
 

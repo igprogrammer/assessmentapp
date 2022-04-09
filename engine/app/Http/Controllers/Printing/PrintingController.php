@@ -33,7 +33,8 @@ class PrintingController extends Controller
             $booking = Booking::getBookingInfo($paymentInfo->invoice);
             $expireDate = date('Y-m-d', strtotime($booking->expire_date));
             $customerName = $payerName;
-            $amount = $booking->amount;
+            //$amount = $booking->amount;
+            $amount = $booking->billAmount;
             $currency = $booking->currency;
 
             $user = User::find($paymentInfo->user_id);
@@ -56,6 +57,7 @@ class PrintingController extends Controller
 
             if (strtolower($type) == 'normal'){
                 $view = 'invoice';
+                $bankName = null;
             }elseif (strtolower($type) == 'nmb'){
                 $view = 'billTransfer';
                 $bankName = 'National Microfinance Bank';
@@ -69,7 +71,7 @@ class PrintingController extends Controller
 
             return view('assessment.invoice.'.$view)
                 ->with(compact('paymentInfo','paymentItems','payerName','qrcodedata',
-                    'amountInWords','applicantName','booking','user','bankName'))
+                    'amountInWords','applicantName','booking','user','bankName','type'))
                 ->with('title','Print assessment');
 
         }else{

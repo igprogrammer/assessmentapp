@@ -106,7 +106,22 @@
         </tr>
         <tr>
 
-            <td></td><td>:{{ strtoupper($bankName) }}</td>
+            <td>
+                Beneficiary Bank
+            </td>
+
+            <td>:
+                <b>
+                    @if($type == 'crdb')
+                        {{ strtoupper($type) }}
+                    @elseif($type == 'nmb')
+                        National Microfinance Bank
+                    @elseif($type == 'nbc')
+                        National Bank of Commerce
+                    @endif
+                </b>
+
+            </td>
 
 
         </tr>
@@ -118,7 +133,7 @@
                 <b>
                     :
 
-                    @if(strtolower($bankName) == 'nmb')
+                    @if(strtolower($type) == 'nmb')
 
                         @if($paymentInfo->currency == 'USD')
                             20410002044
@@ -126,7 +141,7 @@
                             20401000047
                         @endif
 
-                    @elseif(strtolower($bankName) == 'crdb')
+                    @elseif(strtolower($type) == 'crdb')
 
                         @if($paymentInfo->currency == 'USD')
                             0250270344200
@@ -134,7 +149,7 @@
                             01J1009833100
                         @endif
 
-                    @elseif(strtolower($bankName) == 'nbc')
+                    @elseif(strtolower($type) == 'nbc')
 
 
                         @if($paymentInfo->currency == 'USD')
@@ -158,11 +173,11 @@
             <td>
                 <b>:
 
-                    @if(strtolower($bankName) == 'nmb')
+                    @if(strtolower($type) == 'nmb')
                         NMIBTZTZ
-                    @elseif(strtolower($bankName) == 'crdb')
+                    @elseif(strtolower($type) == 'crdb')
                         CORUTZTZ
-                    @elseif(strtolower($bankName) == 'nbc')
+                    @elseif(strtolower($type) == 'nbc')
                         NLCBTZTX
                     @endif
 
@@ -193,7 +208,7 @@
             <td>
                 <b>: /
 
-                    @if(strtolower($bankName) == 'nmb')
+                    @if(strtolower($type) == 'nmb')
 
                         @if($paymentInfo->currency == 'USD')
                             20410002044
@@ -201,7 +216,7 @@
                             20401000047
                         @endif
 
-                    @elseif(strtolower($bankName) == 'crdb')
+                    @elseif(strtolower($type) == 'crdb')
 
                         @if($paymentInfo->currency == 'USD')
                             0250270344200
@@ -209,7 +224,7 @@
                             01J1009833100
                         @endif
 
-                    @elseif(strtolower($bankName) == 'nbc')
+                    @elseif(strtolower($type) == 'nbc')
 
 
                         @if($paymentInfo->currency == 'USD')
@@ -242,7 +257,8 @@
         </tr>
 
         <tr>
-            <td colspan="2">
+            <td>Amount in Words </td><td><b>: {{ ucfirst($amountInWords) }}</b></td>
+            {{--<td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Amount in Words</div>
                     <div class="pr_info bold" style="width: 400px;">:
@@ -250,7 +266,7 @@
                     </div>
                     <div class="clear"></div>
                 </div>
-            </td>
+            </td>--}}
         </tr>
 
         <tr>

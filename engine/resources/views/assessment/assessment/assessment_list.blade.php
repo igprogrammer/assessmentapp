@@ -50,7 +50,7 @@
                 <td>{{ $customer->customer_name }}</td>
                 <td>{{ $payment->date_of_payment }}</td>
                 <td>{{ $payment->currency }}</td>
-                <td>{{ $payment->amount }}</td>
+                <td>{{ $payment->billAmount }}</td>
                 <td>{{ $payment->invoice }}</td>
                 <td>
                 <?php $user = \App\Models\User::find($payment->user_id); ?>
@@ -76,14 +76,9 @@
                         <a onclick="print_assessment('{{ encrypt($payment->id) }}','nbc')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> NBC transfer</a>
 
                     @else
-                        <form id="request-control-number{{ $payment->id }}" class="request-control-number"  action="javascript:void(0)" accept-charset="utf-8" enctype="multipart/form-data">
-                            @csrf
 
-                            <input type="hidden" name="paymentId" id="serviceCode" value="{{ $payment->id }}">
-                            <input type="submit" name="submit" value="Request control number" class="btn btn-primary" id="requestControlNumber">
+                        <a onclick="reRequestControlNumber('{{ encrypt($payment->id) }}')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> Request control number</a>
 
-
-                        </form>
                     @endif
                 </td>
             </tr>

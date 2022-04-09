@@ -22,7 +22,7 @@ Route::get('xml', function (){
 });
 
 Route::get('bill', function (){
-    $data = BillingController::generateBill(31035844,7);
+    $data = BillingController::generateBill(31401730,9);
     dd($data);
 });
 
@@ -141,11 +141,13 @@ Route::post('get-recon-data', array('as'=>'get-recon-data','uses'=>'PaymentContr
 Route::post('receive-recon-request', array('as'=>'receive-recon-request','uses'=>'PaymentController@receiveReconRequest'));
 Route::post('receive-bo-bill', array('as'=>'receive-bo-bill','uses'=>'PaymentController@receive_bo_bill'));
 Route::post('receive-payment', array('as'=>'receive-payment','uses'=>'PaymentController@payment'));
-Route::post('bill-request-response',[\App\Http\Controllers\BillPayment\BillAndPaymentController::class,'receiveBillRequestResponse']);
+Route::post('control-number-notification',[\App\Http\Controllers\BillPayment\BillAndPaymentController::class,'receiveBillRequestResponse']);
 
 
 Route::group(['prefix'=>'assessments'], function (){
-    Route::post('request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber']);
+    /*Route::get('req-cn',[BillingController::class,'reqCn'])->name('req-cn');*/
+    Route::get('re-request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber'])->name('re-request-control-number');
+    //Route::post('request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber']);
     Route::get('/calculate-fee',[\App\Http\Controllers\Assessment\FeeCalculationController::class,'calculateFee'])->name('calculate-fee');
     Route::get('/search-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'searchAssessment'])->name('search-assessment');
     Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterAssessment'])->name('filter');

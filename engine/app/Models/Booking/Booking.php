@@ -63,8 +63,13 @@ class Booking extends Model
 
     }
 
-    public static function getBookingInfoByReference($reference){
+    /*public static function getBookingInfoByReference($reference){
         return  DB::connection('pgsql')->table('booking')->where(['reference'=>$reference])->first();
+
+    }*/
+
+    public static function getBookingInfoByReference($reference){
+        return  DB::table('payments')->where(['reference'=>$reference])->first();
 
     }
 
@@ -78,7 +83,7 @@ class Booking extends Model
     }*/
 
     public static function getInvoiceName($bookingId){
-        return DB::table('customers')->select()->where('booking_id',$booking_id)->first();
+        return DB::table('customers')->select()->where('booking_id',$bookingId)->first();
     }
 
     public static function getBookingData($invoice){
@@ -123,7 +128,11 @@ class Booking extends Model
 
     }
 
-    public static function getBookingInfo($controlNo){
+    /*public static function getBookingInfo($controlNo){
         return DB::connection('pgsql')->table('booking')->where(['invoice'=>$controlNo])->first();
+    }*/
+
+    public static function getBookingInfo($controlNo){
+        return DB::connection('sqlsrv')->table('payments')->where(['invoice'=>$controlNo])->first();
     }
 }
