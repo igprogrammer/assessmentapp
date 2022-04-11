@@ -159,7 +159,7 @@
                 <li class="dropdown">
                     <a style="font-size: 12px" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo \Illuminate\Support\Facades\Auth::user()->name;?> <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a href="{{ url('change-password')  }}"><span class="glyphicon glyphicon-cog"></span> Change password</a></li>
+                        <li><a href="{{ url('change-password')  }}/{{ encrypt(\Illuminate\Support\Facades\Auth::user()->id) }}"><span class="glyphicon glyphicon-cog"></span> Change password</a></li>
                         <li><a href="{{ url('logout')  }}"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
                     </ul>
                 </li>
@@ -198,7 +198,7 @@
                             </table>
                         </div>
                     </li>
-                    <li class="list-group-item normal"><a href="{{ url('admin')  }}"><span class="glyphicon glyphicon-home"></span> Home</a> <span class="glyphicon pull-right"></span></li>
+                    <li class="list-group-item normal"><a href="{{ url('dashboard')  }}"><span class="glyphicon glyphicon-home"></span> Home</a> <span class="glyphicon pull-right"></span></li>
 
                     @if(\Illuminate\Support\Facades\Auth::user()->role == 0)
 
