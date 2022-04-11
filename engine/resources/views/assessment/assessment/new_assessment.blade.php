@@ -68,13 +68,13 @@
                         <div class="col-md-3">
                             <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                 {!! Form::label('title','Entity number') !!}
-                                {!! Form::text('company_number',null,['class'=>'form-control','id'=>'company_number','placeholder'=>'Company number','onchange'=>'checkEntityType()']) !!}
+                                {!! Form::text('company_number',null,['class'=>'form-control','id'=>'company_number','placeholder'=>'Company number','onmouseout'=>'checkEntityType()']) !!}
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
                                 {!! Form::label('title','Entity name') !!}
-                                {!! Form::text('company_name',null,['class'=>'form-control','id'=>'company_name','placeholder'=>'Company name','onchange'=>'checkEntityType()']) !!}
+                                {!! Form::text('company_name',null,['class'=>'form-control','id'=>'company_name','placeholder'=>'Company name','onmouseout'=>'checkEntityType()']) !!}
                             </div>
                         </div>
                         <div class="col-md-3">

@@ -588,6 +588,7 @@
 
 
    function checkEntityType(){
+
        let entityType = document.getElementById('entityType').value;
        let companyNumber = document.getElementById('company_number').value;
 
@@ -607,9 +608,10 @@
                    }
                }
            });
-       }else{
+       }
+       else{
 
-           if(companyNumber != null){
+           if(companyNumber != null && companyNumber > 0 ){
 
                if(window.XMLHttpRequest) {
                    myObject = new XMLHttpRequest();
