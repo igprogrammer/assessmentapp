@@ -447,11 +447,20 @@ class AssessmentController extends Controller
 
                         //get customer info or add new
                         $company_number = $temp_payment->company_number;
-                        $check_customer = Customer::checkCustomer($company_number);
+                        $entityType = $temp_payment->entityType;
+                        $regDate = $temp_payment->regDate;
+                        $check_customer = Customer::checkCustomer($company_number,$entityType);
                         if (empty($check_customer)){
-                            $customer = Customer::saveCustomer($temp_payment->company_number,$temp_payment->company_name);
+                            $customer = Customer::saveCustomer($temp_payment->company_number,$temp_payment->company_name,$entityType,$regDate);
                             $customer_id = $customer->id;
                         }else{
+                            if (empty($check_customer->regDate)){
+                                $check_customer->regDate = $regDate;
+                                $check_customer->save();
+                                $check_customer = Customer::checkCustomer($company_number,$entityType);
+                                $customer_id = $check_customer->id;
+                            }
+
                             $customer_id = $check_customer->id;
                         }
 
@@ -466,7 +475,7 @@ class AssessmentController extends Controller
                         //create new entry in the payments table
                         $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
                             $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId,
-                            $temp_payment->calculationType,$temp_payment->licenceType,$temp_payment->phone_number);
+                            $temp_payment->calculationType,$temp_payment->licenceType,$temp_payment->phone_number,$entityType);
 
                         //return payment id
                         $payment_id = $payment->id;
@@ -1749,6 +1758,8 @@ class AssessmentController extends Controller
         //receive all inputs
         $company_number = $request->company_number;
         $company_name = $request->company_name;
+        $entityType = $request->entityType;
+        $regDate = $request->regDate;
         $item_id = $request->item_id;
         $division_id = $request->division_id;
         $fee_account_id = $request->fee_account_id;
@@ -1859,7 +1870,7 @@ class AssessmentController extends Controller
                 }
 
                 //check_company in temp payment
-                $check_if_exists = TempPayment::where('company_number','=',$company_number)->where('status','=','0')->first();
+                $check_if_exists = TempPayment::where(['company_number'=>$company_number,'entityType'=>$entityType,'status'=>0])->first();
                 if (empty($check_if_exists)){
 
                     $temp_payment = new TempPayment();
@@ -1873,6 +1884,8 @@ class AssessmentController extends Controller
                     $temp_payment->expire_days = $expire_days;
                     $temp_payment->calculationType = $calculationType;
                     $temp_payment->licenceType = $licenceType;
+                    $temp_payment->entityType = $entityType;
+                    $temp_payment->regDate = $regDate;
                     $temp_payment->save();
 
                     $temp_payment_id = $temp_payment->id;
@@ -2438,7 +2451,8 @@ class AssessmentController extends Controller
                                 return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                                     'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                     'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
-                                    'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
+                                    'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
+                                    'entityType'=>$entityType,'regDate'=>$regDate]);
 
                             }
                             else{//year differences is less than one
@@ -2569,7 +2583,8 @@ class AssessmentController extends Controller
                                return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                                    'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                    'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
-                                   'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
+                                   'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
+                                   'entityType'=>$entityType,'regDate'=>$regDate]);
 
                             }
 
@@ -2584,7 +2599,8 @@ class AssessmentController extends Controller
                             return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                                 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                 'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
-                                'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
+                                'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
+                                'entityType'=>$entityType,'regDate'=>$regDate]);
 
 
                         }
@@ -2999,7 +3015,8 @@ class AssessmentController extends Controller
                         return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty,
                             'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                             'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
-                            'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
+                            'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
+                            'entityType'=>$entityType,'regDate'=>$regDate]);
 
                     }
 
@@ -3385,7 +3402,8 @@ class AssessmentController extends Controller
                 return response()->json(['has_form'=>$has_form, 'item_name'=>$item_name, 'item_amount'=>$total_amount, 'penalty_amount'=>$penalty, 'currency'=>$currency,
                     'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id, 'company_number'=>$company_number,
                     'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
-                    'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType]);
+                    'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
+                    'entityType'=>$entityType,'regDate'=>$regDate]);
 
 
             }else{

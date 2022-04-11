@@ -204,10 +204,6 @@
 
                         <li class="list-group-item normal"><a href="{{ url('assessments/new-assessment')  }}"><span class="glyphicon glyphicon-plus-sign"></span> New assessment</a> <span class="glyphicon pull-right"></span></li>
                         <li class="list-group-item normal"><a href="{{ url('assessments/pending')  }}"><span class="glyphicon glyphicon-plus-sign"></span> Pending assessment</a> <span class="glyphicon pull-right"></span></li>
-                        <li class="list-group-item normal"><a href="{{ url('divisions/list')  }}"><span class="glyphicon glyphicon-briefcase"></span> Divisions</a> <span class="glyphicon pull-right"></span></li>
-                        <li class="list-group-item normal"><a href="{{ url('fees/fee-accounts')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fee accounts</a> <span class="glyphicon pull-right"></span></li>
-                        <li class="list-group-item normal"><a href="{{ url('fees/list')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fees</a> <span class="glyphicon pull-right"></span></li>
-                        <li class="list-group-item normal"><a href="{{ url('fees/items')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fee items</a> <span class="glyphicon pull-right"></span></li>
                         <li  style="padding-left: 5px !important;padding-right: 5px !important;" class="list-group-item normal"><a style="margin-left: 10px" href=""><span class="glyphicon glyphicon-book"></span> Assessment reports</a> <span class="glyphicon  pull-right"></span>
                             <ol class="list-roup" style="margin-left: 0px !important;">
 
@@ -221,7 +217,18 @@
 
                             </ol>
                         </li>
-                        <li class="list-group-item normal"><a href="{{ url('users')  }}"><span class="glyphicon glyphicon-user"></span> Users</a> <span class="glyphicon pull-right"></span></li>
+                        <li  style="padding-left: 5px !important;padding-right: 5px !important;" class="list-group-item normal"><a style="margin-left: 10px" href=""><span class="glyphicon glyphicon-book"></span> Settings and configurations</a> <span class="glyphicon  pull-right"></span>
+                            <ol class="list-roup" style="margin-left: 0px !important;">
+
+                                <li class="list-group-item normal"><a href="{{ url('divisions/list')  }}"><span class="glyphicon glyphicon-briefcase"></span> Divisions</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('fees/fee-accounts')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fee accounts</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('fees/list')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fees</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('fees/items')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fee items</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('users')  }}"><span class="glyphicon glyphicon-user"></span> Users</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('settings/pay-options')  }}"><span class="glyphicon glyphicon-user"></span> Payment option</a> <span class="glyphicon pull-right"></span></li>
+
+                            </ol>
+                        </li>
                     @endif
 
                     @if(\Illuminate\Support\Facades\Auth::user()->role == '1')
@@ -578,6 +585,73 @@
        $('#fee_account_id').select2();
        $('#fee_id').select2();
    });
+
+
+   function checkEntityType(){
+       let entityType = document.getElementById('entityType').value;
+       let companyNumber = document.getElementById('company_number').value;
+
+       if (entityType == '' || entityType == null){
+           bootbox.dialog({
+               closeButton: false,
+               message: "&nbsp;&nbsp;&nbsp;Please select entity type.",
+               title: "&nbsp;&nbsp;Action information",
+               buttons: {
+                   main: {
+                       label: "Okay",
+                       className: "btn-primary",
+                       callback: function() {
+                           //do something else
+                           return true;
+                       }
+                   }
+               }
+           });
+       }else{
+
+           if(companyNumber != null){
+
+               if(window.XMLHttpRequest) {
+                   myObject = new XMLHttpRequest();
+               }else if(window.ActiveXObject){
+                   myObject = new ActiveXObject('Micrsoft.XMLHTTP');
+                   myObject.overrideMimeType('text/xml');
+               }
+
+               myObject.onreadystatechange = function (){
+                   data = myObject.responseText;
+                   var response = JSON.parse(data);
+                   if (myObject.readyState == 4) {
+                       if(response.success == 1){
+                           document.getElementById('company_name').value = response.name;
+                           document.getElementById('regDate').value = response.date;
+                       }else{
+                           bootbox.dialog({
+                               closeButton: false,
+                               message: "&nbsp;&nbsp;&nbsp;The number entered does not exist",
+                               title: "&nbsp;&nbsp;Action information",
+                               buttons: {
+                                   main: {
+                                       label: "Okay",
+                                       className: "btn-primary",
+                                       callback: function() {
+                                           //do something else
+                                           window.location.reload(true);
+                                       }
+                                   }
+                               }
+                           });
+                       }
+
+                   }
+               }; //specify name of function that will handle server response........
+               myObject.open('GET','{{ URL::route("get-entity-data") }}?entityType='+entityType+'&companyNumber='+companyNumber,true);
+               myObject.send();
+
+           }
+
+       }
+   }
 
 </script>
 </script>

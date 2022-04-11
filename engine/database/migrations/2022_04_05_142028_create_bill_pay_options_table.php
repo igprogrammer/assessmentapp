@@ -15,6 +15,7 @@ class CreateBillPayOptionsTable extends Migration
     {
         Schema::create('bill_pay_options', function (Blueprint $table) {
             $table->id();
+            $table->string('BillPayOptName');
             $table->integer('BillPayOpt')->default(3);
             $table->timestamps();
         });

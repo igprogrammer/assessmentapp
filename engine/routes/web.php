@@ -144,6 +144,15 @@ Route::post('receive-payment', array('as'=>'receive-payment','uses'=>'PaymentCon
 Route::post('control-number-notification',[\App\Http\Controllers\BillPayment\BillAndPaymentController::class,'receiveBillRequestResponse']);
 
 
+Route::group(['prefix'=>'settings'], function (){
+    Route::post('/update-pay-option',[App\Http\Controllers\Setting\SettingAndConfigurationController::class,'updatePayOption'])->name('update-pay-option');
+    Route::get('/pay-option/{id}/edit', [\App\Http\Controllers\Setting\SettingAndConfigurationController::class,'editPayOption'])->name('pay-option/{id}/edit');
+    Route::get('/pay-options', [\App\Http\Controllers\Setting\SettingAndConfigurationController::class,'payOptions'])->name('pay-options');
+});
+
+
+Route::get('get-entity-data',[\App\Http\Controllers\Internal\ApplicationController::class,'getEntityData'])->name('get-entity-data');
+
 Route::group(['prefix'=>'assessments'], function (){
     /*Route::get('req-cn',[BillingController::class,'reqCn'])->name('req-cn');*/
     Route::get('re-request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber'])->name('re-request-control-number');

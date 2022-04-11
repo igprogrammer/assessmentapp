@@ -126,6 +126,12 @@ return [
             'days' => 14,
         ],
 
+        'pay-option' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payments/pay-option.log'),
+            'level' => 'debug',
+            'days' => 14,
+        ],
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

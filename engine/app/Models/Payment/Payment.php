@@ -108,7 +108,7 @@ class Payment extends Model
     }
 
     public static function savePayment($customer_id,$temp_payment_id,$total_amount,$account_code,$currency,$company_number,
-                                       $invoice,$re_assessment_description,$bookingId,$calculationType,$licenceType,$billPhoneNumber){
+                                       $invoice,$re_assessment_description,$bookingId,$calculationType,$licenceType,$billPhoneNumber,$entityType){
 
         $data = Payment::where(['temp_payment_id'=>$temp_payment_id])->first();
         if (empty($data)){
@@ -136,6 +136,7 @@ class Payment extends Model
             $payment->calculationType = $calculationType;
             $payment->licenceType = $licenceType;
             $payment->phone_number = $billPhoneNumber;
+            $payment->entityType = $entityType;
             $payment->save();
         }else{
             $payment = $data;

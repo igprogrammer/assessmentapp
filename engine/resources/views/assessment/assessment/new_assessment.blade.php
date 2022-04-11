@@ -55,18 +55,32 @@
                             </p>
                         </div>
                     @endif
+                    <div class="col-md-12">
+                        <div class="col-md-3">
+                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                {!! Form::label('title','Entity type') !!}
+                                {!! Form::select('entityType',[''=>'Select type','CMP'=>'Company','BN'=>'Business Name','TM'=>'Trade and service mark','PT'=>'Patent'],array(),['class'=>'form-control','id'=>'entityType']) !!}
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="col-md-12">
                         <div class="col-md-3">
                             <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                {!! Form::label('title','Company number') !!}
-                                {!! Form::text('company_number',null,['class'=>'form-control','id'=>'company_number','placeholder'=>'Company number']) !!}
+                                {!! Form::label('title','Entity number') !!}
+                                {!! Form::text('company_number',null,['class'=>'form-control','id'=>'company_number','placeholder'=>'Company number','onchange'=>'checkEntityType()']) !!}
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                {!! Form::label('title','Company name') !!}
-                                {!! Form::text('company_name',null,['class'=>'form-control','id'=>'company_name','placeholder'=>'Company name']) !!}
+                                {!! Form::label('title','Entity name') !!}
+                                {!! Form::text('company_name',null,['class'=>'form-control','id'=>'company_name','placeholder'=>'Company name','onchange'=>'checkEntityType()']) !!}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                {!! Form::label('title','Inc/Reg date') !!}
+                                {!! Form::text('regDate',null,['class'=>'form-control datepicker','id'=>'regDate','placeholder'=>'Incorporation or Reg date']) !!}
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -154,6 +168,8 @@
         function add_fee(){
             var company_number = document.getElementById('company_number').value;
             var company_name = document.getElementById('company_name').value;
+            var entityType = document.getElementById('entityType').value;
+            var regDate = document.getElementById('regDate').value;
             var filing_date = document.getElementById('filing_date').value;
             var division_id = document.getElementById('division_id').value;
             var fee_account_id = document.getElementById('fee_account_id').value;
@@ -307,12 +323,15 @@
                         if (response.success == 1){
                             var company_number = response.company_number;
                             var company_name = response.company_name;
+                            var company_name = response.company_name;
                             var filing = response.filing_date;
                             var phone_number = response.phone_number;
                             var expire_days = response.expire_days;
                             var number_of_files = response.number_of_files;
                             var calculationType = response.calculationType;
                             var licenceType = response.licenceType;
+                            var entityType = response.entityType;
+                            var regDate = response.regDate;
                             bootbox.dialog({
                                 closeButton: false,
                                 message: "&nbsp;&nbsp;&nbsp;The fee item is successfully added to this assessment,click Okay to continue...",
@@ -331,6 +350,8 @@
                                             document.getElementById('number_of_files').value = number_of_files;
                                             document.getElementById('calculationType').value = calculationType;
                                             document.getElementById('licenceType').value = licenceType;
+                                            document.getElementById('entityType').value = entityType;
+                                            document.getElementById('regDate').value = regDate;
                                             //document.getElementById('temp_payment_id').value = filing_date;
 
 
@@ -387,6 +408,8 @@
                                             var number_of_files = response.number_of_files;
                                             var calculationType = response.calculationType;
                                             var licenceType = response.licenceType;
+                                            var entityType = response.entityType;
+                                            var regDate = response.regDate;
 
 
                                             document.getElementById('company_number').value = company_number;
@@ -397,6 +420,8 @@
                                             document.getElementById('number_of_files').value = number_of_files;
                                             document.getElementById('calculationType').value = calculationType;
                                             document.getElementById('licenceType').value = licenceType;
+                                            document.getElementById('entityType').value = entityType;
+                                            document.getElementById('regDate').value = regDate;
                                             //document.getElementById('temp_payment_id').value = filing_date;
 
 
@@ -471,7 +496,7 @@
                         }
                     }
                 }; //specify name of function that will handle server response........
-                myObject.open('GET','{{ URL::route("add-assessment-fee") }}?licenceType='+licenceType+'&calculationType='+calculationType+'&number_of_files='+number_of_files+'&expire_days='+expire_days+'&phone_number='+phone_number+'&charge_days='+charge_days+'&company_number='+company_number+'&company_name='+company_name+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id+'&year='+year+'&item_name='+item_name+'&currency='+currency+'&item_amount='+item_amount+'&penalty_amount='+penalty_amount,true);
+                myObject.open('GET','{{ URL::route("add-assessment-fee") }}?regDate='+regDate+'&entityType='+entityType+'&licenceType='+licenceType+'&calculationType='+calculationType+'&number_of_files='+number_of_files+'&expire_days='+expire_days+'&phone_number='+phone_number+'&charge_days='+charge_days+'&company_number='+company_number+'&company_name='+company_name+'&filing_date='+filing_date+'&division_id='+division_id+'&fee_account_id='+fee_account_id+'&fee_id='+fee_id+'&item_id='+item_id+'&year='+year+'&item_name='+item_name+'&currency='+currency+'&item_amount='+item_amount+'&penalty_amount='+penalty_amount,true);
                 myObject.send();
             }
 
@@ -547,7 +572,7 @@
 
 
 
-        //get selected item contents
+        //calculate fee
         function calculate_fee(){
 
             var item_id = document.getElementById('item_id').value;
