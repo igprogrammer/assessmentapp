@@ -26,7 +26,7 @@
         </th>
 
         <th>
-            Payment status
+            Status
         </th>
 
         <th>
@@ -56,35 +56,18 @@
                 <?php $user = \App\Models\User::find($payment->user_id); ?>
                 {{ $user->name }}
                 <td>
-                    @if($payment->isPaid == 1)
-                        <a class="btn btn-success"><i class="glyphicon glyphicon-check"> Paid</i></a>
+                    @if((int)$payment->invoice >= 991350000000)
+                        @if($payment->isPaid == 1)
+                            <a class="btn btn-success" style="width: 100%"><i class="glyphicon glyphicon-check"> Paid</i></a>
+                        @else
+                            <a class="btn btn-info" style="width: 100%"><i class="glyphicon glyphicon-remove"> Not paid</i></a>
+                        @endif
                     @else
-                        <a class="btn btn-danger"><i class="glyphicon glyphicon-remove"> Not paid</i></a>
+                        <a class="btn btn-danger" style="width: 100%"><i class="glyphicon glyphicon-remove-circle"> No control number</i></a>
                     @endif
                 </td>
                 <td>
-                    <a style="width: 100%" class="btn btn-warning" href="{{ url('assessments/assessment-items') }}/{{ encrypt($payment->id) }}/{{ $flag }}"><i class="glyphicon glyphicon-eye-open"></i> View</a>
-                    <br><br>
-                @if((int)$payment->invoice >= 991350000000)
-
-                        <a onclick="print_assessment('{{ encrypt($payment->id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
-                        <br><br>
-                        <a onclick="print_assessment('{{ encrypt($payment->id) }}','nmb')" class="btn btn-info"><i class="glyphicon glyphicon-print"></i> NMB transfer</a>
-                        <br><br>
-                        <a onclick="print_assessment('{{ encrypt($payment->id) }}','crdb')" class="btn btn-warning"><i class="glyphicon glyphicon-print"></i> CRDB transfer</a>
-                        <br><br>
-                        <a onclick="print_assessment('{{ encrypt($payment->id) }}','nbc')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> NBC transfer</a>
-
-                        @if($payment->isPaid == 1)
-                            <br><br>
-                            <a onclick="print_assessment('{{ encrypt($payment->id) }}','receipt')" class="btn btn-info"><i class="glyphicon glyphicon-print"></i> Print receipt</a>
-                        @endif
-
-                    @else
-
-                        <a onclick="reRequestControlNumber('{{ encrypt($payment->id) }}')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> Request control number</a>
-
-                    @endif
+                    @include('assessment.assessment.printingActionControls')
                 </td>
             </tr>
             <?php $sn++; ?>
