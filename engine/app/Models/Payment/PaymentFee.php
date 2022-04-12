@@ -44,6 +44,7 @@ class PaymentFee extends Model
         return DB::connection('sqlsrv')->table('payments as p')
             ->join('payment_fees as pf','pf.payment_id','=','p.id')
             ->join('fee_items as fi','fi.id','pf.fee_item_id')
+            ->join('fees as f','f.id','=','fi.fee_id')
             ->where(['payment_id'=>$paymentId])->paginate();
     }
 }

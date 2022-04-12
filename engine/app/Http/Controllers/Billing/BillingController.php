@@ -239,7 +239,7 @@ class BillingController extends Controller
         $status = ServerListener::checkServerStatus($url);
 
         if (!$status){
-            $message = "The GePG payment gateway :".$url." is not reachable at the moment,please try again later or contact System administrator";
+            $message = "The GePG payment gateway :".$url." responded with error status 3 and it is not reachable at the moment,please try again later or contact System administrator";
             Log::channel('assessment-error')->info($message);
             $msg = "The Payment gateway is not reachable at the moment,please try again later or contact System administrator";
             EventLog::saveEvent(Auth::user()->username,'Billing','User',Auth::user()->name,'Fail','Request control number',$message,EventLog::getIpAddress(),EventLog::getMacAddress(),'BillingController','sendBillContentViaAssessmentSystem');

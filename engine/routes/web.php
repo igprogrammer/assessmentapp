@@ -153,13 +153,20 @@ Route::group(['prefix'=>'settings'], function (){
 
 Route::get('get-entity-data',[\App\Http\Controllers\Internal\ApplicationController::class,'getEntityData'])->name('get-entity-data');
 
+Route::group(['prefix'=>'receipts'], function (){
+    Route::get('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments']);
+    Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments']);
+    Route::get('/list/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'generatedReceipts'])->name('/list/{flag}');
+});
+
 Route::group(['prefix'=>'assessments'], function (){
     /*Route::get('req-cn',[BillingController::class,'reqCn'])->name('req-cn');*/
     Route::get('re-request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber'])->name('re-request-control-number');
     //Route::post('request-control-number',[\App\Http\Controllers\Billing\BillingController::class,'requestControlNumber']);
     Route::get('/calculate-fee',[\App\Http\Controllers\Assessment\FeeCalculationController::class,'calculateFee'])->name('calculate-fee');
+    Route::get('/search-payment',[\App\Http\Controllers\Assessment\AssessmentController::class,'searchPayment'])->name('search-payment');
     Route::get('/search-assessment',[\App\Http\Controllers\Assessment\AssessmentController::class,'searchAssessment'])->name('search-assessment');
-    Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterAssessment'])->name('filter');
+    Route::post('/filter',[\App\Http\Controllers\Assessment\AssessmentController::class,'filterGeneratedAssessments'])->name('filter');
     Route::get('/get-attachment/{attachment_id}',[\App\Http\Controllers\Assessment\AssessmentController::class,'getFileContent'])->name('get-attachment/{attachment_id}');
     Route::get('/assessment-items/{payment_id}/{flag}',[\App\Http\Controllers\Assessment\AssessmentController::class,'assessmentItems'])->name('assessment-items/{payment_id}/flag');
     Route::get('/print-bill-payment',[\App\Http\Controllers\Printing\PrintingController::class,'printBillPayment'])->name('print-bill-payment');
@@ -219,6 +226,9 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('logout',[\App\Http\Controllers\Assessment\LoginController::class,'login'])->name('logout');
 
 });
+
+
+Route::get('get-bl-calculation-criteria',[\App\Http\Controllers\Assessment\AssessmentController::class,'billCalculationCriteria'])->name('get-bl-calculation-criteria');
 Route::post('change-password', [\App\Http\Controllers\Assessment\UserController::class,'updatePassword']);
 Route::get('change-password/{employeeId}',[\App\Http\Controllers\Assessment\UserController::class,'changePassword']);
 Route::post('update-user',[\App\Http\Controllers\Assessment\UserController::class,'updateUser']);
@@ -233,3 +243,12 @@ Route::get('dashboard',[\App\Http\Controllers\Assessment\PrivateController::clas
 Route::post('authenticate',[\App\Http\Controllers\Assessment\LoginController::class,'authenticate']);
 Route::get('login',[\App\Http\Controllers\Assessment\LoginController::class,'login'])->name('login');
 Route::get('/',[\App\Http\Controllers\Assessment\LoginController::class,'login']);
+
+Route::group(['prefix'=>'customers'], function (){
+    Route::get('search-customer', [\App\Http\Controllers\Customer\CustomerController::class,'searchCustomer'])->name('search-customer');
+    Route::post('/update-customer',[\App\Http\Controllers\Customer\CustomerController::class,'updateCustomer']);
+    Route::get('/edit/{id}',[\App\Http\Controllers\Customer\CustomerController::class,'editCustomer'])->name('/edit/{id}');
+    Route::post('/save-customer',[\App\Http\Controllers\Customer\CustomerController::class,'saveCustomer']);
+    Route::get('/add',[App\Http\Controllers\Customer\CustomerController::class,'addCustomer']);
+    Route::get('/list',[App\Http\Controllers\Customer\CustomerController::class,'customers']);
+});

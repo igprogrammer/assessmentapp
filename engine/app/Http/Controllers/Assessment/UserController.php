@@ -130,10 +130,20 @@ class UserController extends Controller
 
         try {
 
+            $name = $request->name;
+
+            if (!empty($name)) {
+                $users = User::where('name', 'LIKE', '%' . $name . '%')->paginate();
+            }else{
+                $users = User::paginate(100);
+            }
+
+            return view('assessment.admin.search_user_result')->with(compact('users'))->with('title', 'Users');
+
         }catch (\Exception $exception){
             $message = "An error has occurred,please contact System administrator";
-            GeneralController::exceptionHandler('Controller',$exception,'BusinessNameController','bn_updates_applications','business-name-app-error');
-            return redirect()->to('bn/new-updates')->with('error-message',$message);
+            GeneralController::exceptionHandler('Controller',$exception,'UserController','searchUser','user-error');
+            return redirect()->to('users')->with('error-message',$message);
         }
 
     }

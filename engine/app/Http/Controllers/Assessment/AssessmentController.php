@@ -36,6 +36,10 @@ class AssessmentController extends Controller
         $this->middleware('auth');
     }
 
+    public function billCalculationCriteria(){
+        return view('assessment.assessment.bl_calculation_criteria');
+    }
+
     public function searchAssessment(Request $request){
 
         try {
@@ -45,70 +49,137 @@ class AssessmentController extends Controller
             $flag = $request->flag;
             $controlNumber = $request->controlNumber;
             $reference = $request->reference;
+            $searchType = $request->searchType;
 
-            if (strtolower($flag) == 'individual'){
+            if ($searchType == 'receipt'){
 
-                if (!empty($entityName)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('customer_name','LIKE','%'.$entityName.'%')->where(['p.user_id'=>Auth::user()->id])->get();
-                }elseif (!empty($entityNumber)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('company_number','LIKE','%'.$entityNumber.'%')->where(['p.user_id'=>Auth::user()->id])->get();
-                }elseif (!empty($controlNumber)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('controlNumber','LIKE','%'.$controlNumber.'%')->where(['p.user_id'=>Auth::user()->id])->get();
-                }elseif (!empty($reference)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('reference','LIKE','%'.$reference.'%')->where(['p.user_id'=>Auth::user()->id])->get();
-                }else{
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where(['p.user_id'=>Auth::user()->id])->get();
+                if (strtolower($flag) == 'individual'){
+
+                    if (!empty($entityName)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('customer_name','LIKE','%'.$entityName.'%')->where(['p.accountantId'=>Auth::user()->id])->where(['isPaid'=>1])->get();
+                    }elseif (!empty($entityNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('company_number','LIKE','%'.$entityNumber.'%')->where(['p.accountantId'=>Auth::user()->id])->where(['isPaid'=>1])->get();
+                    }elseif (!empty($controlNumber)){
+                        //dd(Auth::user()->id);
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('controlNumber','LIKE','%'.$controlNumber.'%')->where(['p.accountantId'=>Auth::user()->id])->where(['isPaid'=>1])->get();
+                    }elseif (!empty($reference)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('reference','LIKE','%'.$reference.'%')->where(['p.accountantId'=>Auth::user()->id])->where(['isPaid'=>1])->get();
+                    }else{
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where(['p.accountantId'=>Auth::user()->id])->where(['isPaid'=>1])->get();
+                    }
                 }
+                else{
+
+                    if (!empty($entityName)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('customer_name','LIKE','%'.$entityName.'%')->where(['isPaid'=>1])->get();
+                    }elseif (!empty($entityNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('company_number','LIKE','%'.$entityNumber.'%')->where(['isPaid'=>1])->get();
+                    }elseif (!empty($controlNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('controlNumber','LIKE','%'.$controlNumber.'%')->where(['isPaid'=>1])->get();
+                    }elseif (!empty($reference)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where('reference','LIKE','%'.$reference.'%')->where(['isPaid'=>1])->get();
+                    }else{
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.accountantId')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.accountantId','name','isPaid','p.user_id')
+                            ->where(['isPaid'=>1])->get();
+                    }
+                }
+
+                $view = "receipt_list";
             }else{
+                if (strtolower($flag) == 'individual'){
 
-                if (!empty($entityName)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('customer_name','LIKE','%'.$entityName.'%')->get();
-                }elseif (!empty($entityNumber)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('company_number','LIKE','%'.$entityNumber.'%')->get();
-                }elseif (!empty($controlNumber)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('controlNumber','LIKE','%'.$controlNumber.'%')->get();
-                }elseif (!empty($reference)){
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->where('reference','LIKE','%'.$reference.'%')->get();
-                }else{
-                    $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
-                        ->join('users as u','u.id','=','p.user_id')
-                        ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
-                        ->get();
+                    if (!empty($entityName)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('customer_name','LIKE','%'.$entityName.'%')->where(['p.user_id'=>Auth::user()->id])->get();
+                    }elseif (!empty($entityNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('company_number','LIKE','%'.$entityNumber.'%')->where(['p.user_id'=>Auth::user()->id])->get();
+                    }elseif (!empty($controlNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('controlNumber','LIKE','%'.$controlNumber.'%')->where(['p.user_id'=>Auth::user()->id])->get();
+                    }elseif (!empty($reference)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('reference','LIKE','%'.$reference.'%')->where(['p.user_id'=>Auth::user()->id])->get();
+                    }else{
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where(['p.user_id'=>Auth::user()->id])->get();
+                    }
                 }
+                else{
+
+                    if (!empty($entityName)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('customer_name','LIKE','%'.$entityName.'%')->get();
+                    }elseif (!empty($entityNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('company_number','LIKE','%'.$entityNumber.'%')->get();
+                    }elseif (!empty($controlNumber)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('controlNumber','LIKE','%'.$controlNumber.'%')->get();
+                    }elseif (!empty($reference)){
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->where('reference','LIKE','%'.$reference.'%')->get();
+                    }else{
+                        $payments = DB::table('payments as p')->join('customers as c','c.id','=','p.customer_id')
+                            ->join('users as u','u.id','=','p.user_id')
+                            ->select('p.id as id','company_number','customer_name','currency','invoice','billAmount','paidAmount','customer_id','date_of_payment','p.user_id','name','isPaid')
+                            ->get();
+                    }
+                }
+                $view = "assessment_list";
             }
+
             $flag = ucfirst($flag);
 
-            return view('assessment.assessment.assessment_list')
+            return view('assessment.assessment.'.$view)
                 ->with('title',$flag)->with('payments',$payments)->with('flag',$flag);
-
-
 
         }catch (\Exception $exception){
             $message = "An error has occurred,please contact System administrator";
@@ -3518,16 +3589,34 @@ class AssessmentController extends Controller
         $flag = $request->flag;
         $fromDate = $request->from_date;
         $toDate = $request->to_date;
+        $searchType = $request->searchType;
 
-        $payments = Payment::getAssessmentRecords($flag,$fromDate,$toDate);
+        if ($searchType == 'assessment'){
+            $payments = Payment::getAssessmentRecords($flag,$fromDate,$toDate);
+            $flag = ucfirst($flag);
+
+            if (strtolower($flag) == 'tmp'){
+                $view = "temporary_assessments";
+            }else{
+                $view = "generated_assessments";
+            }
+        }else{
+            $payments = Payment::getReceiptRecords($flag,$fromDate,$toDate);
+            $view = "generated_receipts";
+        }
+
+
+        return view('assessment.assessment.'.$view)->with('title',$flag)->with(compact('payments','flag'));
+
+
+    }
+
+    public function generatedReceipts($flag){
+
+        $payments = Payment::getReceiptRecords($flag);
         $flag = ucfirst($flag);
 
-        if (strtolower($flag) == 'tmp'){
-            return view('assessment.assessment.temporary_assessments')->with('title',$flag)->with(compact('payments','flag'));
-        }else{
-            return view('assessment.assessment.generated_assessments')->with('title',$flag)->with(compact('payments','flag'));
-
-        }
+        return view('assessment.assessment.generated_receipts')->with('title',$flag)->with(compact('payments','flag'));
 
     }
 

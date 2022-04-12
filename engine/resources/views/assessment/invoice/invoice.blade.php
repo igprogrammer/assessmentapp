@@ -43,6 +43,9 @@
                 <div class="print_h">United Republic of Tanzania</div>
                 <div class="print_b">Business Registrations and Licensing Agency</div>
                 <div class="print_h">Government Bill</div>
+                @if($isCopyBill == 1)
+                    <div class="print_h">*****This is a printed copy*****</div>
+                @endif
             </div>
 
         </div>

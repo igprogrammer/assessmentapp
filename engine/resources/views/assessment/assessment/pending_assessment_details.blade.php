@@ -91,177 +91,201 @@
                     </div>
 
 
-                    <div class="col-md-12">
-                        <div class="panel panel-info">
-                            <!-- Default panel contents -->
-                            <div class="panel-heading">Item selection</div>
-                            <div class="panel-body">
-                                <div class="col-md-12">
-                                    <div class="col-md-4">
-                                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                            {!! Form::label('title','Division') !!}
-                                            {!! Form::select('division_id',[''=>'Select division']+$divisions,$division->id,['class'=>'form-control','onchange'=>'get_fee_accounts()','id'=>'division_id']) !!}
+                        @if(!in_array(\Illuminate\Support\Facades\Auth::user()->isSupervisor, array(1,2,3)))
+
+                            <div class="col-md-12">
+                                <div class="panel panel-info">
+                                    <!-- Default panel contents -->
+                                    <div class="panel-heading">Item selection</div>
+                                    <div class="panel-body">
+                                        <div class="col-md-12">
+                                            <div class="col-md-4">
+                                                <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                    {!! Form::label('title','Division') !!}
+                                                    {!! Form::select('division_id',[''=>'Select division']+$divisions,$division->id,['class'=>'form-control','onchange'=>'get_fee_accounts()','id'=>'division_id']) !!}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                    {!! Form::label('title','Account') !!}
+                                                    {!! Form::select('fee_account_id',[''=>'Select account']+$fee_accounts,$feeAcc->id,['class'=>'form-control','id'=>'fee_account_id','onchange'=>'get_fees()']) !!}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                    {!! Form::label('title','Fee') !!}
+                                                    {!! Form::select('fee_id',[''=>'Select fee']+$fees,array(),['class'=>'form-control','id'=>'fee_id','onchange'=>'get_items()']) !!}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                            {!! Form::label('title','Account') !!}
-                                            {!! Form::select('fee_account_id',[''=>'Select account']+$fee_accounts,$feeAcc->id,['class'=>'form-control','id'=>'fee_account_id','onchange'=>'get_fees()']) !!}
+                                        <div class="col-md-12">
+                                            <div class="col-md-4">
+                                                <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                    {!! Form::label('title','Item') !!}
+                                                    {!! Form::select('item_id',[''=>'Select item'],array(),['class'=>'form-control','id'=>'item_id','onchange'=>'display_fields()']) !!}
+                                                </div>
+                                            </div>
+                                            <div id="blCalculationCriteria">
+
+                                                @if($feeAcc->account_code == 440331)
+                                                    <div class="col-md-4">
+                                                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                            {!! Form::label('title','Majority ownership') !!}
+                                                            {!! Form::select('calculationType',[''=>'Select type','1'=>'Local','2'=>'Foreign'],$temp_payment->calculationType,['class'=>'form-control','id'=>'calculationType']) !!}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                            {!! Form::label('title','Licence type') !!}
+                                                            {!! Form::select('licenceType',[''=>'Select type','1'=>'Principal','2'=>'Branch'],$temp_payment->licenceType,['class'=>'form-control','id'=>'licenceType']) !!}
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                            {!! Form::label('title','Fee') !!}
-                                            {!! Form::select('fee_id',[''=>'Select fee']+$fees,array(),['class'=>'form-control','id'=>'fee_id','onchange'=>'get_items()']) !!}
+
+                                        <div  id="filing_year" style="display: none">
+                                            <div class="col-md-12">
+                                                <br>
+                                                <div class="col-md-3">
+
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        <label>Year</label>
+                                                        <?php
+                                                        $years = array();
+                                                        $current_date = date('Y-m-d');
+                                                        $current_year = date('Y');
+                                                        $start_year = '1960';
+
+                                                        for ($i=1;$start_year+$i <= $current_year;$i++){
+                                                            $years[$start_year + $i] = $start_year + $i;
+                                                        }
+
+                                                        ?>
+
+                                                        {!! Form::select('year',[''=>'Select year']+$years,array(),['class'=>'form-control','id'=>'year']) !!}
+
+
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
+                                        <div  id="calculate_fee_button" style="display: none;">
+                                            <div class="col-md-12">
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        {!! Form::label('title','Majority ownership') !!}
+                                                        {!! Form::select('calculationType',[''=>'Select type','1'=>'Local','2'=>'Foreign'],$temp_payment->calculationType,['class'=>'form-control','id'=>'calculationType']) !!}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        {!! Form::label('title','Licence type') !!}
+                                                        {!! Form::select('licenceType',[''=>'Select type','1'=>'Principal','2'=>'Branch'],$temp_payment->licenceType,['class'=>'form-control','id'=>'licenceType']) !!}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        {!! Form::label('title','Phone number') !!}
+                                                        {!! Form::text('phone_number',$temp_payment->phone_number,['class'=>'form-control','id'=>'phone_number','placeholder'=>'Phone number']) !!}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        {!! Form::label('title','Expire days') !!}
+                                                        {!! Form::text('expire_days',$temp_payment->expire_days,['class'=>'form-control','id'=>'expire_days','placeholder'=>'Expire days']) !!}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        {!! Form::label('title','Number of files') !!}
+                                                        {!! Form::number('number_of_files',1,['class'=>'form-control','id'=>'number_of_files','required','min'=>'1']) !!}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        {!! Form::label('title','Item fee') !!}
+                                                        {!! Form::text('item_fee',null,['class'=>'form-control','id'=>'item_fee','placeholder'=>'Please specify item amount here']) !!}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="col-md-4">
+                                                    <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
+                                                        <br><a class="btn btn-success" onclick="calculate_fee()">Calculate fee</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div  id="item_contents" style="display: none;">
+                                            <div class="col-md-12"><b style="text-decoration: underline;">Item details</b>
+                                                <hr>
+
+                                                <table class="table">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>
+                                                            Item name
+                                                        </th>
+                                                        <th>
+                                                            Currency
+                                                        </th>
+                                                        <th>
+                                                            Item amount
+                                                        </th>
+                                                        <th>
+                                                            Penalty amount
+                                                        </th>
+                                                        <th>
+                                                            Charge days
+                                                        </th>
+                                                        <th>
+                                                            Action
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr>
+                                                        <td>
+                                                            <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Item name" readonly>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="currency" id="currency" class="form-control" placeholder="Currency" readonly>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="item_amount" id="item_amount" class="form-control" placeholder="Item amount" readonly>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="penalty_amount" id="penalty_amount" class="form-control" placeholder="Penalty amount" readonly>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="charge_days" id="charge_days" class="form-control" placeholder="Charge days" readonly>
+                                                        </td>
+                                                        <td>
+                                                            <a class="btn btn-success" onclick="add_fee()"> Add fee</a>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+
+                                        </div>
+
+
                                     </div>
+
                                 </div>
-                                <div class="col-md-12">
-                                    <div class="col-md-3">
-                                        <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                            {!! Form::label('title','Item') !!}
-                                            {!! Form::select('item_id',[''=>'Select item'],array(),['class'=>'form-control','id'=>'item_id','onchange'=>'display_fields()']) !!}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div  id="filing_year" style="display: none">
-                                    <div class="col-md-12">
-                                        <br>
-                                        <div class="col-md-3">
-
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                <label>Year</label>
-                                                <?php
-                                                $years = array();
-                                                $current_date = date('Y-m-d');
-                                                $current_year = date('Y');
-                                                $start_year = '1960';
-
-                                                for ($i=1;$start_year+$i <= $current_year;$i++){
-                                                    $years[$start_year + $i] = $start_year + $i;
-                                                }
-
-                                                ?>
-
-                                                {!! Form::select('year',[''=>'Select year']+$years,array(),['class'=>'form-control','id'=>'year']) !!}
-
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div  id="calculate_fee_button" style="display: none;">
-                                    <div class="col-md-12">
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                {!! Form::label('title','Majority ownership') !!}
-                                                {!! Form::select('calculationType',[''=>'Select type','1'=>'Local','2'=>'Foreign'],$temp_payment->calculationType,['class'=>'form-control','id'=>'calculationType']) !!}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                {!! Form::label('title','Licence type') !!}
-                                                {!! Form::select('licenceType',[''=>'Select type','1'=>'Principal','2'=>'Branch'],$temp_payment->licenceType,['class'=>'form-control','id'=>'licenceType']) !!}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                {!! Form::label('title','Phone number') !!}
-                                                {!! Form::text('phone_number',$temp_payment->phone_number,['class'=>'form-control','id'=>'phone_number','placeholder'=>'Phone number']) !!}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                {!! Form::label('title','Expire days') !!}
-                                                {!! Form::text('expire_days',$temp_payment->expire_days,['class'=>'form-control','id'=>'expire_days','placeholder'=>'Expire days']) !!}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                {!! Form::label('title','Number of files') !!}
-                                                {!! Form::number('number_of_files',1,['class'=>'form-control','id'=>'number_of_files','required','min'=>'1']) !!}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                {!! Form::label('title','Item fee') !!}
-                                                {!! Form::text('item_fee',null,['class'=>'form-control','id'=>'item_fee','placeholder'=>'Please specify item amount here']) !!}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="col-md-4">
-                                            <div class="form-group {{$errors->has('questionTitle')?'has-error':''}}">
-                                                <br><a class="btn btn-success" onclick="calculate_fee()">Calculate fee</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                <div  id="item_contents" style="display: none;">
-                                    <div class="col-md-12"><b style="text-decoration: underline;">Item details</b>
-                                        <hr>
-
-                                        <table class="table">
-                                            <thead>
-                                            <tr>
-                                                <th>
-                                                    Item name
-                                                </th>
-                                                <th>
-                                                    Currency
-                                                </th>
-                                                <th>
-                                                    Item amount
-                                                </th>
-                                                <th>
-                                                    Penalty amount
-                                                </th>
-                                                <th>
-                                                    Charge days
-                                                </th>
-                                                <th>
-                                                    Action
-                                                </th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr>
-                                                <td>
-                                                    <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Item name" readonly>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="currency" id="currency" class="form-control" placeholder="Currency" readonly>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="item_amount" id="item_amount" class="form-control" placeholder="Item amount" readonly>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="penalty_amount" id="penalty_amount" class="form-control" placeholder="Penalty amount" readonly>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="charge_days" id="charge_days" class="form-control" placeholder="Charge days" readonly>
-                                                </td>
-                                                <td>
-                                                    <a class="btn btn-success" onclick="add_fee()"> Add fee</a>
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-
-                                </div>
-
-
                             </div>
 
-                        </div>
-                    </div>
+                        @endif
+
+
 
                     <div id="selected_items">
 
@@ -770,6 +794,32 @@
 
 
                             }else{
+
+                                if (response.accountCode == 440331){
+                                    document.getElementById('blCalculationCriteria').innerHTML = "<div class='col-md-4'><div class='form-group'> <label><b>Majority ownership</b></label> <select name='calculationType' class='form-control' id='calculationType'> <option value=''>Select type</option><option value='1'>Local</option><option value='2'>Foreign</option> </select> </div></div><div class='col-md-4'><div class='form-group'><label><b>Licence type</b></label><select name='calculationType' class='form-control' id='licenceType'> <option value=''>Select type</option><option value='1'>Principal</option><option value='2'>Branch</option> </select></div></div>";
+
+                                    /*if(window.XMLHttpRequest) {
+                                        myObject = new XMLHttpRequest();
+                                    }else if(window.ActiveXObject){
+                                        myObject = new ActiveXObject('Micrsoft.XMLHTTP');
+                                        myObject.overrideMimeType('text/xml');
+                                    }
+
+                                    myObject.onreadystatechange = function (){
+                                        data = myObject.responseText;
+                                        if (myObject.readyState == 4) {
+
+
+                                        }
+                                    }; //specify name of function that will handle server response........
+                                    myObject.open('GET','{{ URL::route("get-bl-calculation-criteria") }}?account_code='+response.account_code,true);
+                                    myObject.send();*/
+
+                                }else{
+                                    document.getElementById('blCalculationCriteria').innerHTML = '';
+                                }
+
+
                                 document.getElementById('filing_year').style.display = 'none';
                                 document.getElementById('item_contents').style.display = 'block';
                                 document.getElementById('calculate_fee_button').style.display = 'block';
@@ -781,12 +831,16 @@
                                 document.getElementById('charge_days').value = '';
                                 document.getElementById('currency').value = '';
                                 document.getElementById('year').value = '2022';
+                                document.getElementById('accountCode').value = response.accountCode;
 
                                 if (response.defineFeeAmount == '1'){
                                     document.getElementById('item_fee').value = '';
                                 }else{
                                     document.getElementById('item_fee').value = response.item_amount;
                                 }
+
+
+
                             }
                         }else{
                             document.getElementById('filing_year').style.display = 'none';
@@ -817,26 +871,34 @@
             var fee_id = document.getElementById('fee_id').value;
             var year = document.getElementById('year').value;
             var number_of_files = document.getElementById('number_of_files').value;
+            var accountCode = $('#accountCode').val();
 
-            if($('#calculationType').val() == ''){
-                bootbox.alert('Please select calculation type');
-                return false;
-            }else {
-                var calculationType = $('#calculationType').val();
+            if (accountCode == 440331){
+                if($('#calculationType').val() == ''){
+                    bootbox.alert('Please select calculation type');
+                    return false;
+                }else {
+                    var calculationType = $('#calculationType').val();
+                }
+
+                if($('#licenceType').val() == ''){
+                    bootbox.alert('Please select licence type');
+                    return false;
+                }else {
+                    var licenceType = $('#licenceType').val();
+                }
+            }else{
+                var calculationType = 1;
+                var licenceType = 1;
             }
+
+
 
             if($('#item_fee').val() == ''){
                 bootbox.alert('Please define item fee amount');
                 return false;
             }else {
                 var item_fee = $('#item_fee').val();
-            }
-
-            if($('#licenceType').val() == ''){
-                bootbox.alert('Please select licence type');
-                return false;
-            }else {
-                var licenceType = $('#licenceType').val();
             }
 
             //var licenceType = document.getElementById('licenceType').value;

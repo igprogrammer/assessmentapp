@@ -39,6 +39,9 @@
 
                 <div class="print_h">Exchequer Receipt</div>
                 <div class="print_b">Stakabadhi ya Malipo ya Serikali </div>
+                @if($isCopyReceipt == 1)
+                    <div class="print_h">*****This is a printed copy*****</div>
+                @endif
             </div>
 
         </div>
@@ -51,7 +54,7 @@
                 <div class="formRow tr_print">
                     <div class="pr_title">Receipt Number  </div>
                     <div class="pr_info bold">:
-                        {{ $paymentInfo->ReceiptNo ?? $paymentInfo->BrelaReceiptNo }}
+                        {{ $paymentInfo->PayRefId ?? $paymentInfo->receiptNo }}
                     </div>
                     <div class="clear"></div>
                 </div>
@@ -62,7 +65,7 @@
                 </div>
                 <div class="formRow tr_print">
                     <div class="pr_title">Amount  </div>
-                    <div class="pr_info">: {{ $paymentInfo->PaidAmount }} {{ $paymentInfo->CurrencyUsed }}</div>
+                    <div class="pr_info">: {{ $paymentInfo->paidAmount }} {{ $paymentInfo->currency }}</div>
                     <div class="clear"></div>
                 </div>
                 <div class="formRow tr_print">
@@ -87,12 +90,12 @@
                             @foreach($paymentItems as $item)
 
                                 <div class="pr_title">Billed Item (<?php echo $sn; ?>) </div>
-                                <div class="pr_info_items" style="width: 450px;">: {{ $item->ItemName.'-'.$item->InvoiceNo }}</div>
-                                <div class="pr_info_s_r" style="float: right;text-align: right;">: {{ $item->Amount }} </div>
+                                <div class="pr_info_items" style="width: 450px;">: {{ $item->fee_name.'-'.$item->reference }}</div>
+                                <div class="pr_info_s_r" style="float: right;text-align: right;">: {{ $item->item_amount }} </div>
                                 <div class="clear"></div>
 
 
-                                <?php $total = $total + $item->Amount; $sn++;?>
+                                <?php $total = $total + $item->item_amount; $sn++;?>
                             @endforeach
 
                         @else
@@ -112,7 +115,7 @@
             <td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Bill Reference  </div>
-                    <div class="pr_info">: {{ $paymentInfo->InvoiceNo }}</div>
+                    <div class="pr_info">: {{ $paymentInfo->reference }}</div>
                     <div class="clear"></div>
                 </div>
             </td>
@@ -122,7 +125,7 @@
             <td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Payment Control Number  </div>
-                    <div class="pr_info">: {{ $paymentInfo->ControlNo }}</div>
+                    <div class="pr_info">: {{ $paymentInfo->controlNumber }}</div>
                     <div class="clear"></div>
                 </div>
             </td>
@@ -132,7 +135,7 @@
             <td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Payment Date  </div>
-                    <div class="pr_info">: {{ date('d-M-Y', strtotime($paymentInfo->PaidDate)) }}</div>
+                    <div class="pr_info">: {{ date('d-M-Y', strtotime($paymentInfo->payDate)) }}</div>
                     <div class="clear"></div>
                 </div>
             </td>
@@ -143,7 +146,7 @@
             <td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Issued by</div>
-                    <div class="pr_info" style="width: 400px;">: <strong>System</strong></div>
+                    <div class="pr_info" style="width: 400px;">: <strong>{{ $accountant->name }}</strong></div>
                     <div class="clear"></div>
                 </div>
             </td>
@@ -152,14 +155,14 @@
             <td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Date issued</div>
-                    <div class="pr_info" style="width: 400px;">: {{ date('d-M-Y H:i:s', strtotime(date('Y-m-d H:i:s'))) }}</div>
+                    <div class="pr_info" style="width: 400px;">: {{ date('d-M-Y H:i:s', strtotime(date($paymentInfo->printedDate))) }}</div>
                     <div class="clear"></div>
                 </div>
             </td>
         </tr>
 
 
-        {{--<tr>
+        <tr>
             <td colspan="2">
                 <div class="formRow tr_print">
                     <div class="pr_title">Signature</div>
@@ -167,7 +170,7 @@
                     <div class="clear"></div>
                 </div>
             </td>
-        </tr>--}}
+        </tr>
         <tr>
             <td colspan="2">
                 <div class="print_foot">Business Registrations and Licensing Agency &copy; 2021 All Rights Reserved (BRELA)</div>

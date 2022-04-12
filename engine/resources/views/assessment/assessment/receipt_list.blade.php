@@ -16,13 +16,16 @@
             Currency
         </th>
         <th>
-            Assessment amount
+            Bill amount
         </th>
         <th>
             Control number
         </th>
         <th>
             Assessed by
+        </th>
+        <th>
+            Receipt by
         </th>
 
         <th>
@@ -55,6 +58,11 @@
                 <td>
                 <?php $user = \App\Models\User::find($payment->user_id); ?>
                 {{ $user->name }}
+                </td>
+                <td>
+                    <?php $acc = \App\Models\User::find($payment->accountantId); ?>
+                    {{ $acc->name }}
+                </td>
                 <td>
                     @if($payment->isPaid == 1)
                         <a class="btn btn-success"><i class="glyphicon glyphicon-check"> Paid</i></a>
@@ -65,7 +73,7 @@
                 <td>
                     <a style="width: 100%" class="btn btn-warning" href="{{ url('assessments/assessment-items') }}/{{ encrypt($payment->id) }}/{{ $flag }}"><i class="glyphicon glyphicon-eye-open"></i> View</a>
                     <br><br>
-                @if((int)$payment->invoice >= 991350000000)
+                    @if((int)$payment->invoice >= 991350000000)
 
                         <a onclick="print_assessment('{{ encrypt($payment->id) }}','normal')" class="btn btn-success"><i class="glyphicon glyphicon-print"></i> Print normal bill</a>
                         <br><br>

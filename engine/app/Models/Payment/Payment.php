@@ -13,6 +13,26 @@ class Payment extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
+    public static function updateBillPrinting($paymentId,$isBillPrinted){
+        $payment = Payment::find($paymentId);
+        if (!empty($payment)){
+            $payment->isBillPrinted = $isBillPrinted;
+            $payment->save();
+            return $payment;
+        }
+    }
+
+    public static function setAccountantId($paymentId,$isReceiptPrinted){
+        $payment = Payment::find($paymentId);
+        if (!empty($payment)){
+            $payment->accountantId = Auth::user()->id;
+            $payment->printedDate = Carbon::now('Africa/Dar_es_Salaam');
+            $payment->isReceiptPrinted = $isReceiptPrinted;
+            $payment->save();
+            return $payment;
+        }
+    }
+
     public static function updatePaymentReceiptNumber($bookingId,$receiptNumber){
         DB::table('payments')->where(['bookingId'=>$bookingId])->update(array(
             'receiptNo'=>$receiptNumber
@@ -27,7 +47,7 @@ class Payment extends Model
             'payDate'=>$payDate,
             'bankName'=>$bankName,
             'payPhoneNumber'=>$phoneNumber,
-            'amountPaid' => $amount,
+            'paidAmount' => $amount,
             'bank_transaction_id'=>$bankTransactionId,
             'mobile_transaction_id'=>$mobileTransactionId,
             'bank_account_number'=>$bankName,
@@ -42,7 +62,7 @@ class Payment extends Model
     }
 
     public static function checkPaymentCompleted($bookingId){
-        return DB::table('payments')->where(['bookingId'=>$bookingId,'isPaid'=>1]);
+        return DB::table('payments')->where(['bookingId'=>$bookingId,'isPaid'=>1])->first();
     }
 
     public static function updateControlNumber($bookingId,$controlNumber){
@@ -144,6 +164,37 @@ class Payment extends Model
 
 
         return $payment;
+    }
+
+    public static function getReceiptRecords($flag, $fromDate = null, $toDate = null){
+        $records = array();
+        if ($fromDate != null && $toDate != null){
+            $fromDate = date('Y-m-d 00:00:00', strtotime($fromDate));
+            $toDate = date('Y-m-d 23:59:59', strtotime($toDate));
+        }
+
+        if (strtolower($flag) == 'individual'){
+
+            $records = Payment::where(['payments.accountantId'=>Auth::user()->id,'isPaid'=>1]);
+
+            if ($fromDate != null && $toDate != null){
+                $records = $records->whereBetween('printedDate', array($fromDate,$toDate));
+            }
+
+            $records = $records->orderBy('payments.id','DESC')->get();
+
+        }else{
+            $records = Payment::where(['isPaid'=>1])->orderBy('payments.id','DESC');
+
+            if ($fromDate != null && $toDate != null){
+                $records = $records->whereBetween('printedDate', array($fromDate,$toDate));
+            }
+
+            $records = $records->get();
+        }
+
+        return $records;
+
     }
 
     public static function getAssessmentRecords($flag, $fromDate = null, $toDate = null){

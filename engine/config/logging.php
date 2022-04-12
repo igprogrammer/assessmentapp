@@ -132,6 +132,18 @@ return [
             'level' => 'debug',
             'days' => 14,
         ],
+        'customer' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/customer/customer.log'),
+            'level' => 'debug',
+            'days' => 14,
+        ],
+        'customer-error' => [
+        'driver' => 'daily',
+        'path' => storage_path('logs/customer/customer-error.log'),
+        'level' => 'debug',
+        'days' => 14,
+        ],
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

@@ -10,6 +10,17 @@ class Customer extends Model
 {
     use HasFactory;
 
+    public static function updateCustomer($id,$company_number,$customer_name,$entityType,$regDate){
+        $customer = Customer::find($id);
+        $customer->company_number = $company_number;
+        $customer->customer_name = ucwords(strtolower($customer_name));
+        $customer->entityType = $entityType;
+        $customer->regDate = $regDate;
+        $customer->save();
+
+        return $customer;
+    }
+
     public static function saveCustomer($company_number,$customer_name,$entityType,$regDate){
         $customer = new Customer();
         $customer->company_number = $company_number;

@@ -10,20 +10,15 @@
             <div class="panel-heading">Assessment list</div>
             <div class="panel-body">
 
-                {!! Form::open(['url'=>'assessments/filter','method'=>'post','class'=>'form','files'=>true])!!}
+                {!! Form::open(['url'=>'receipts/filter','method'=>'post','class'=>'form','files'=>true])!!}
                 <table class="table table-striped table-bordered">
                     <td>From</td>
-                    <td>
-                        <input type="text" name="from_date" value="<?php echo date('Y-m-d'); ?>" class="form-control datepicker">
-                    </td>
-                    <td>To</td>
-                    <td>
-                        <input type="text" name="to_date" value="<?php echo date('Y-m-d'); ?>" class="form-control datepicker">
-                    </td>
+                    <td><input type="text" name="from_date" value="<?php echo date('Y-m-d'); ?>" class="form-control datepicker"></td>
+                    <td>To</td><td><input type="text" name="to_date" value="<?php echo date('Y-m-d'); ?>" class="form-control datepicker"></td>
                     <td></td>
                     <td>
                         {!! Form::hidden('flag',$flag) !!}
-                        {!! Form::hidden('searchType','assessment') !!}
+                        {!! Form::hidden('searchType','receipt') !!}
                         {!! Form::submit('Filter',['class'=>'btn btn-success']) !!}
                     </td>
                 </table>
@@ -47,7 +42,7 @@
                             <input type="text" class="form-control" name="entityName" onkeyup="search_entity()" id="entityName" placeholder="Search by name">
                         </td>
                         <td>
-                            <input type="hidden" value="{{ 'assessment' }}" id="searchType">
+                            <input type="hidden" value="{{ 'receipt' }}" id="searchType">
                             <input type="text" class="form-control" name="reference" onkeyup="search_entity()" id="reference" placeholder="Search by reference number">
                         </td>
                     </tr>
@@ -62,14 +57,14 @@
                 @endif
 
                 <div  id="assessment-details">
-                    @include('assessment.assessment.assessment_list')
+                    @include('assessment.assessment.receipt_list')
                 </div>
 
 
             </div>
         </div>
 
-        </div>
+    </div>
 
 
     </div>
@@ -87,6 +82,7 @@
         {
             testprintout=window.open("{{ URL::route('print-bill-payment') }}?type="+type+"&payment_id="+payment_id+"","t","width=1000,height=700,menubar=yes,resizable=yes,scrollbars=yes,toolbar=yes,location=no").print();
         }
+
 
         function search_entity(){
             var controlNumber = document.getElementById('controlNumber').value;

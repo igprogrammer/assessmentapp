@@ -535,6 +535,32 @@
 
 
                             }else{
+
+                                if (response.accountCode == 440331){
+                                    document.getElementById('blCalculationCriteria').innerHTML = "<div class='col-md-4'><div class='form-group'> <label><b>Majority ownership</b></label> <select name='calculationType' class='form-control' id='calculationType'> <option value=''>Select type</option><option value='1'>Local</option><option value='2'>Foreign</option> </select> </div></div><div class='col-md-4'><div class='form-group'><label><b>Licence type</b></label><select name='calculationType' class='form-control' id='licenceType'> <option value=''>Select type</option><option value='1'>Principal</option><option value='2'>Branch</option> </select></div></div>";
+
+                                    /*if(window.XMLHttpRequest) {
+                                        myObject = new XMLHttpRequest();
+                                    }else if(window.ActiveXObject){
+                                        myObject = new ActiveXObject('Micrsoft.XMLHTTP');
+                                        myObject.overrideMimeType('text/xml');
+                                    }
+
+                                    myObject.onreadystatechange = function (){
+                                        data = myObject.responseText;
+                                        if (myObject.readyState == 4) {
+
+
+                                        }
+                                    }; //specify name of function that will handle server response........
+                                    myObject.open('GET','{{ URL::route("get-bl-calculation-criteria") }}?account_code='+response.account_code,true);
+                                    myObject.send();*/
+
+                                }else{
+                                    document.getElementById('blCalculationCriteria').innerHTML = '';
+                                }
+
+
                                 document.getElementById('filing_year').style.display = 'none';
                                 document.getElementById('item_contents').style.display = 'block';
                                 document.getElementById('calculate_fee_button').style.display = 'block';
@@ -546,12 +572,16 @@
                                 document.getElementById('charge_days').value = '';
                                 document.getElementById('currency').value = '';
                                 document.getElementById('year').value = '2022';
+                                document.getElementById('accountCode').value = response.accountCode;
 
                                 if (response.defineFeeAmount == '1'){
                                     document.getElementById('item_fee').value = '';
                                 }else{
                                     document.getElementById('item_fee').value = response.item_amount;
                                 }
+
+
+
                             }
                         }else{
                             document.getElementById('filing_year').style.display = 'none';
@@ -582,26 +612,34 @@
             var fee_id = document.getElementById('fee_id').value;
             var year = document.getElementById('year').value;
             var number_of_files = document.getElementById('number_of_files').value;
+            var accountCode = $('#accountCode').val();
 
-            if($('#calculationType').val() == ''){
-                bootbox.alert('Please select calculation type');
-                return false;
-            }else {
-                var calculationType = $('#calculationType').val();
+            if (accountCode == 440331){
+                if($('#calculationType').val() == ''){
+                    bootbox.alert('Please select calculation type');
+                    return false;
+                }else {
+                    var calculationType = $('#calculationType').val();
+                }
+
+                if($('#licenceType').val() == ''){
+                    bootbox.alert('Please select licence type');
+                    return false;
+                }else {
+                    var licenceType = $('#licenceType').val();
+                }
+            }else{
+                var calculationType = 1;
+                var licenceType = 1;
             }
+
+
 
             if($('#item_fee').val() == ''){
                 bootbox.alert('Please define item fee amount');
                 return false;
             }else {
                 var item_fee = $('#item_fee').val();
-            }
-
-            if($('#licenceType').val() == ''){
-                bootbox.alert('Please select licence type');
-                return false;
-            }else {
-                var licenceType = $('#licenceType').val();
             }
 
             //var licenceType = document.getElementById('licenceType').value;

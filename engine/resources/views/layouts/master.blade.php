@@ -217,6 +217,14 @@
 
                             </ol>
                         </li>
+                        <li  style="padding-left: 5px !important;padding-right: 5px !important;" class="list-group-item normal"><a style="margin-left: 10px" href=""><span class="glyphicon glyphicon-book"></span> Payment reports</a> <span class="glyphicon  pull-right"></span>
+                            <ol class="list-roup" style="margin-left: 0px !important;">
+
+                                <li class="list-group-item normal"><a href="{{ url('receipts/list/')  }}/individual"><span class="glyphicon glyphicon-folder-close"></span> My receipts</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('receipts/list/')  }}/all"><span class="glyphicon glyphicon-folder-close"></span> All receipts</a> <span class="glyphicon pull-right"></span></li>
+
+                            </ol>
+                        </li>
                         <li  style="padding-left: 5px !important;padding-right: 5px !important;" class="list-group-item normal"><a style="margin-left: 10px" href=""><span class="glyphicon glyphicon-book"></span> Settings and configurations</a> <span class="glyphicon  pull-right"></span>
                             <ol class="list-roup" style="margin-left: 0px !important;">
 
@@ -225,7 +233,9 @@
                                 <li class="list-group-item normal"><a href="{{ url('fees/list')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fees</a> <span class="glyphicon pull-right"></span></li>
                                 <li class="list-group-item normal"><a href="{{ url('fees/items')  }}"><span class="glyphicon glyphicon-briefcase"></span> Fee items</a> <span class="glyphicon pull-right"></span></li>
                                 <li class="list-group-item normal"><a href="{{ url('users')  }}"><span class="glyphicon glyphicon-user"></span> Users</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('customers/list')  }}"><span class="glyphicon glyphicon-user"></span> Customer</a> <span class="glyphicon pull-right"></span></li>
                                 <li class="list-group-item normal"><a href="{{ url('settings/pay-options')  }}"><span class="glyphicon glyphicon-user"></span> Payment option</a> <span class="glyphicon pull-right"></span></li>
+
 
                             </ol>
                         </li>
@@ -245,6 +255,19 @@
 
 
 
+
+                            </ol>
+                        </li>
+
+                    @endif
+
+                    @if(\Illuminate\Support\Facades\Auth::user()->role == 2)
+
+                        <li  style="padding-left: 5px !important;padding-right: 5px !important;" class="list-group-item normal"><a style="margin-left: 10px" href=""><span class="glyphicon glyphicon-book"></span> Payment reports</a> <span class="glyphicon  pull-right"></span>
+                            <ol class="list-roup" style="margin-left: 0px !important;">
+
+                                <li class="list-group-item normal"><a href="{{ url('receipts/list/')  }}/individual"><span class="glyphicon glyphicon-folder-close"></span> My receipts</a> <span class="glyphicon pull-right"></span></li>
+                                <li class="list-group-item normal"><a href="{{ url('receipts/list/')  }}/all"><span class="glyphicon glyphicon-folder-close"></span> All receipts</a> <span class="glyphicon pull-right"></span></li>
 
                             </ol>
                         </li>
@@ -504,15 +527,29 @@
                                        message: data.message,
                                        callback: function () {
                                            window.location.reload(true);
+                                           $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
                                        }
                                    })
 
                                }else if (data.success == 3){
 
-                                   bootbox.alert({
+                                   /*bootbox.alert({
                                        message: data.message,
                                        callback: function () {
                                            window.location.reload(true);
+                                       }
+                                   })*/
+
+                                   bootbox.alert({
+                                       message: data.message,
+                                       callback: function () {
+                                          /* var base = '{{ url('assessments/continue-assessment') }}';
+                                           var url = base+'?tempStatus='+data.tempStatus+'&payment_id='+data.payment_id;
+                                           window.location.href = url;*/
+
+                                           var base = '{{ url('assessments/new-assessment') }}';
+                                           window.location.href = base;
+                                           $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
                                        }
                                    })
 
@@ -534,6 +571,7 @@
                                        callback: function () {
                                            var base = '{{ url('assessments/new-assessment') }}';
                                            window.location.href = base;
+                                           $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
                                        }
                                    })
 
@@ -551,7 +589,16 @@
                                    message: data.message,
                                    callback: function () {
 
-                                       window.location.reload();
+                                       bootbox.alert({
+                                           message: data.message,
+                                           callback: function () {
+                                               var base = '{{ url('assessments/new-assessment') }}';
+                                               window.location.href = base;
+                                               $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
+                                           }
+                                       })
+
+                                       //window.location.reload();
                                        $('.loading').fadeOut(2000, function (){ $('a[href]').unbind("click"); });
                                        filterButton.prop('disabled',false);
 
@@ -654,6 +701,8 @@
 
        }
    }
+
+
 
 </script>
 </script>
