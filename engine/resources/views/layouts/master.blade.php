@@ -90,7 +90,7 @@
 
 
 </head>
-<body style="background-color: #999999">
+<body style="background-color: white">
 
 <div class="container">
     <div class="row">
@@ -105,7 +105,7 @@
     </div>
 </div>
 
-<div class="container-fluid" style="background-color: #55acee;">
+<div class="container-fluid" style="background-color: #337ab7;">
     <div class="row">
         <div class="col-md-3" style="padding-top: 1em">
             {!! Html::image('img/logo.png') !!}
@@ -117,7 +117,7 @@
         </div>
         <div class="col-md-6 hospital" style="text-align: center;font-size: 20px;">
             <i>
-                Assessment and Receipt System
+                BRELA Billing System
             </i>
         </div>
     </div>
