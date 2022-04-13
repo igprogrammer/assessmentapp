@@ -330,7 +330,7 @@
 <div class="container-fluid">
     <div class="row-fluid">
         <nav class="navbar navbar-inverse navbar-static-bottom" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
-            <center><p style="color: white">Assessment and Receipt System &copy; BRELA  <?= date('Y') ?></p></center>
+            <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
         </nav>
     </div>
 </div>

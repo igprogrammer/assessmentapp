@@ -97,10 +97,10 @@
 <!--end special date picker scripts -->
 
 <nav class="navbar navbar-inverse navbar-fixed-bottom hidden-xs hidden-md hidden-sm" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
-    <center><p style="color: white">Assessment System &copy; BRELA  <?= date('Y') ?></p></center>
+    <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
 </nav>
 <nav class="navbar navbar-inverse navbar-static-bottom visible-xs visible-md visible-sm" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
-    <center><p style="color: white">Assessment System &copy; BRELA  <?= date('Y') ?></p></center>
+    <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
 </nav>
 </body>
 </html>
