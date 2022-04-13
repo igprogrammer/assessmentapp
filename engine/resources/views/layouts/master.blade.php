@@ -327,13 +327,30 @@
 <!-- Include the plugin's CSS and JS:FOR MULTISELECT -->
 
 
-<div class="container-fluid">
-    <div class="row-fluid">
-        <nav class="navbar navbar-inverse navbar-static-bottom" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
-            <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
-        </nav>
+{{--
+<nav class="navbar navbar-inverse navbar-fixed-bottom hidden-xs hidden-md hidden-sm" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
+    <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
+</nav>
+<nav class="navbar navbar-inverse navbar-static-bottom visible-xs visible-md visible-sm" style="border-radius: 0 !important; padding-top: 15px;margin-bottom: 0px;margin-top: 10px">
+    <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
+</nav>
+--}}
+
+<nav class="navbar navbar-inverse navbar-static-top" style="margin: 0%">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="searchbar">
+            <ul class="nav navbar-nav tarehe" style="margin-right: 5%; font-family: arial;" >
+
+                <li>
+                    <a>
+                        <center><p style="color: white">Billing System &copy; BRELA  <?= date('Y') ?></p></center>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
     </div>
-</div>
+</nav>
 
 
 <!-- script to allow multiple select -->

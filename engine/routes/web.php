@@ -80,7 +80,7 @@ Route::get('items', function (){
 
 Route::get('bls', function (){
     $types = \Illuminate\Support\Facades\DB::connection('mysql_b')->table('tnbp_eadvisory_category')
-        ->where(['status'=>0])->get();
+        ->where(['status'=>0,'licenseIssuingAuthority'=>'schedule A'])->get();
 
     $apps = array();
     foreach ($types as $type){
@@ -104,6 +104,9 @@ Route::get('bls', function (){
         $branchUsdFee = $type->branchLicenseFeeTShs;
         $branchTzsFee = $type->branchLicenseFeeUsd;
         $licenceType = $type->licenseIssuingAuthority;
+        $isPerUnitFeeApplicable = $type->isPerUnitFeeApplicable;
+        $perUnitlicenseFeeTShs = $type->perUnitlicenseFeeTShs;
+        $perUnitlicenseFeeUSD = $type->perUnitlicenseFeeUSD;
 
         $checkName = \App\Models\Assessment\FeeItem::where(['item_name'=>$categoryName])->first();
         if (empty($checkName)){
@@ -125,7 +128,10 @@ Route::get('bls', function (){
                 'principalTzsFee'=>$principalTzsFee,
                 'branchUsdFee'=>$branchUsdFee,
                 'branchTzsFee'=>$branchTzsFee,
-                'licenceType'=>$licenceType
+                'licenceType'=>$licenceType,
+                'isPerUnitFeeApplicable'=>$isPerUnitFeeApplicable,
+                'perUnitlicenseFeeTShs'=>$perUnitlicenseFeeTShs,
+                'perUnitlicenseFeeUSD'=>$perUnitlicenseFeeUSD
             ));
 
         }
