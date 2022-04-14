@@ -407,7 +407,7 @@ class BillingController extends Controller
         return self::isXMLContentValid($xmlContent, $version, $encoding);
     }
 
-    public function isXMLContentValid($xmlContent, $version = '1.0', $encoding = 'utf-8')
+    public static function isXMLContentValid($xmlContent, $version = '1.0', $encoding = 'utf-8')
     {
 
         if (trim($xmlContent) == '') {
