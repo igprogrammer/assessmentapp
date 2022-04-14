@@ -185,8 +185,29 @@
 
             var phone_number = document.getElementById('phone_number').value;
             var expire_days = document.getElementById('expire_days').value;
-            var calculationType = document.getElementById('calculationType').value;
-            var licenceType = document.getElementById('licenceType').value;
+            //var calculationType = document.getElementById('calculationType').value;
+            //var licenceType = document.getElementById('licenceType').value;
+
+            var accountCode = $('#accountCode').val();
+
+            if (accountCode == 440342){
+                if($('#calculationType').val() == ''){
+                    bootbox.alert('Please select calculation type');
+                    return false;
+                }else {
+                    var calculationType = $('#calculationType').val();
+                }
+
+                if($('#licenceType').val() == ''){
+                    bootbox.alert('Please select licence type');
+                    return false;
+                }else {
+                    var licenceType = $('#licenceType').val();
+                }
+            }else{
+                var calculationType = 1;
+                var licenceType = 1;
+            }
 
             if (document.getElementById('item_name').value == null || document.getElementById('item_name').value == ''){
                 bootbox.dialog({
@@ -328,8 +349,12 @@
                             var phone_number = response.phone_number;
                             var expire_days = response.expire_days;
                             var number_of_files = response.number_of_files;
-                            var calculationType = response.calculationType;
-                            var licenceType = response.licenceType;
+                            //var calculationType = response.calculationType;
+                            //var licenceType = response.licenceType;
+                            if (response.accountCode == 440342){
+                                var calculationType = response.calculationType;
+                                var licenceType = response.licenceType;
+                            }
                             var entityType = response.entityType;
                             var regDate = response.regDate;
                             bootbox.dialog({
@@ -348,8 +373,12 @@
                                             document.getElementById('phone_number').value = phone_number;
                                             document.getElementById('expire_days').value = expire_days;
                                             document.getElementById('number_of_files').value = number_of_files;
-                                            document.getElementById('calculationType').value = calculationType;
-                                            document.getElementById('licenceType').value = licenceType;
+                                            //document.getElementById('calculationType').value = calculationType;
+                                            //document.getElementById('licenceType').value = licenceType;
+                                            if (response.accountCode == 440342){
+                                                var calculationType = response.calculationType;
+                                                var licenceType = response.licenceType;
+                                            }
                                             document.getElementById('entityType').value = entityType;
                                             document.getElementById('regDate').value = regDate;
                                             //document.getElementById('temp_payment_id').value = filing_date;
@@ -406,8 +435,12 @@
                                             var phone_number = response.phone_number;
                                             var expire_days = response.expire_days;
                                             var number_of_files = response.number_of_files;
-                                            var calculationType = response.calculationType;
-                                            var licenceType = response.licenceType;
+                                            //var calculationType = response.calculationType;
+                                            //var licenceType = response.licenceType;
+                                            if (response.accountCode == 440342){
+                                                var calculationType = response.calculationType;
+                                                var licenceType = response.licenceType;
+                                            }
                                             var entityType = response.entityType;
                                             var regDate = response.regDate;
 

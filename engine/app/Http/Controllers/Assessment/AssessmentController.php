@@ -1845,8 +1845,18 @@ class AssessmentController extends Controller
         $expire_days = $request->expire_days;
 
         $number_of_files = $request->number_of_files;
-        $calculationType = $request->calculationType;
-        $licenceType = $request->licenceType;
+
+        $f = Fee::find($fee_id);
+        if ($f->account_code == 440342){
+            $accountCode = $f->account_code;
+            $calculationType = $request->calculationType;
+            $licenceType = $request->licenceType;
+        }else{
+            $calculationType = 1;
+            $licenceType = 1;
+            $accountCode = $f->account_code;
+        }
+
 
         //check if year is selected
 
@@ -2523,7 +2533,7 @@ class AssessmentController extends Controller
                                     'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                     'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
                                     'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
-                                    'entityType'=>$entityType,'regDate'=>$regDate]);
+                                    'entityType'=>$entityType,'regDate'=>$regDate,'accountCode'=>$accountCode]);
 
                             }
                             else{//year differences is less than one
@@ -2655,7 +2665,7 @@ class AssessmentController extends Controller
                                    'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                    'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
                                    'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
-                                   'entityType'=>$entityType,'regDate'=>$regDate]);
+                                   'entityType'=>$entityType,'regDate'=>$regDate,'accountCode'=>$accountCode]);
 
                             }
 
@@ -2671,7 +2681,7 @@ class AssessmentController extends Controller
                                 'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                                 'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number,
                                 'expire_days'=>$expire_days, 'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
-                                'entityType'=>$entityType,'regDate'=>$regDate]);
+                                'entityType'=>$entityType,'regDate'=>$regDate,'accountCode'=>$accountCode]);
 
 
                         }
@@ -3087,7 +3097,7 @@ class AssessmentController extends Controller
                             'currency'=>$currency, 'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id,
                             'company_number'=>$company_number, 'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
                             'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
-                            'entityType'=>$entityType,'regDate'=>$regDate]);
+                            'entityType'=>$entityType,'regDate'=>$regDate,'accountCode'=>$accountCode]);
 
                     }
 
@@ -3474,7 +3484,7 @@ class AssessmentController extends Controller
                     'days'=>$days, 'copy_charge'=>$copy_charges, 'success'=>'1', 'temp_payment_id'=>$temp_payment_id, 'company_number'=>$company_number,
                     'company_name'=>$company_name, 'filling_date'=>$filing_date, 'phone_number'=>$phone_number, 'expire_days'=>$expire_days,
                     'number_of_files'=>$number_of_files,'calculationType'=>$calculationType,'licenceType'=>$licenceType,
-                    'entityType'=>$entityType,'regDate'=>$regDate]);
+                    'entityType'=>$entityType,'regDate'=>$regDate,'accountCode'=>$accountCode]);
 
 
             }else{
