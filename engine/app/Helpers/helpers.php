@@ -50,3 +50,7 @@ function pubKey(){
 function privKey(){
     return config('customurl.pri_key');
 }
+
+function initialControlNumber(){
+    return config('customurl.initial_control_number');
+}

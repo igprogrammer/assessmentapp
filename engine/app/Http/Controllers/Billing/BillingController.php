@@ -74,6 +74,8 @@ class BillingController extends Controller
             $bill = Billing::getBill($payment->reference);
             if (!empty($bill)){
 
+                if ((int)$payment->invoice < initialControlNumber())
+
                 $data = BillingController::generateBill($bill->reference,$paymentId);
                 $response = $data->getData()->result;
                 $message = $data->getData()->message;
@@ -190,7 +192,7 @@ class BillingController extends Controller
             $dataArray = [
                 'BillHdr'=>[
                     'SpCode'=>$SpCodeVar,
-                    'RtrRespFlg'=>true
+                    'RtrRespFlg'=>'true'
                 ],
                 'BillTrxInf'=>[
                     'BillId'=>$bookingInfo->bookingId,
@@ -209,7 +211,7 @@ class BillingController extends Controller
                     'PyrEmail'=>'usajili@brela.go.tz',
                     'Ccy'=>$bookingInfo->currency,
                     'BillEqvAmt'=>$billEqvAmount,
-                    'RemFlag'=>true,
+                    'RemFlag'=>'true',
                     'BillPayOpt'=>$payOpt,
                     'BillItems'=>$repo
                 ]

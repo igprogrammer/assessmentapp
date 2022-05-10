@@ -829,7 +829,7 @@
                             }else{
 
                                 if (response.accountCode == 440342){
-                                    document.getElementById('blCalculationCriteria').innerHTML = "<div class='col-md-4'><div class='form-group'> <label><b>Majority ownership</b></label> <select name='calculationType' class='form-control' id='calculationType'> <option value=''>Select type</option><option value='1'>Local</option><option value='2'>Foreign</option> </select> </div></div><div class='col-md-4'><div class='form-group'><label><b>Licence type</b></label><select name='calculationType' class='form-control' id='licenceType'> <option value=''>Select type</option><option value='1'>Principal</option><option value='2'>Branch</option> </select></div></div>";
+                                    document.getElementById('blCalculationCriteria').innerHTML = "<div class='col-md-4'><div class='form-group'> <label><b>Majority ownership</b></label> <select name='calculationType' class='form-control' id='calculationType'> <option value=''>Select type</option><option value='1'>Local</option><option value='2'>Foreign</option> </select> </div></div><div class='col-md-4'><div class='form-group'><label><b>Licence type</b></label><select name='licenceType' class='form-control' id='licenceType'> <option value=''>Select type</option><option value='1'>Principal</option><option value='2'>Branch</option> </select></div></div>";
 
                                     /*if(window.XMLHttpRequest) {
                                         myObject = new XMLHttpRequest();

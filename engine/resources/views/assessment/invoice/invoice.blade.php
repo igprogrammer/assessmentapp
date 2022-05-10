@@ -8,7 +8,7 @@
 
     <link href="{{ asset('assets/payment/css/billreceipt.css') }}" rel="stylesheet" type="text/css" />
     <!-- Bootstrap 3.3.4 -->
-    <link href="{{asset(url('bootstrap/css/bootstrap.min.css'))}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset(url('assets/payment/css/bootstrap.min.css'))}}" rel="stylesheet" type="text/css" />
     <!-- Font Awesome Icons -->
 <!--
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />

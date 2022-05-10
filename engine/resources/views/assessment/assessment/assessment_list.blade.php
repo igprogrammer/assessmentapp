@@ -54,7 +54,7 @@
                 <td>{{ $payment->invoice }}</td>
                 <td>
                 <?php $user = \App\Models\User::find($payment->user_id); ?>
-                {{ $user->name }}
+               {{-- {{ $user->name }}--}}
                 <td>
                     @if((int)$payment->invoice >= 991350000000)
                         @if($payment->isPaid == 1)

@@ -85,8 +85,6 @@ Route::get('bls', function (){
     $apps = array();
     foreach ($types as $type){
 
-        $apps[] = $type->categoryId;
-
         $categoryName = $type->categoryName;
         $categoryName = simplexml_load_string($categoryName);
         $categoryName = json_encode($categoryName);
@@ -110,6 +108,7 @@ Route::get('bls', function (){
 
         $checkName = \App\Models\Assessment\FeeItem::where(['item_name'=>$categoryName])->first();
         if (empty($checkName)){
+            $apps[] = $type->categoryId;
 
             \Illuminate\Support\Facades\DB::table('fee_items')->insert(array(
                 'user_id'=>\Illuminate\Support\Facades\Auth::user()->id,
@@ -134,6 +133,11 @@ Route::get('bls', function (){
                 'perUnitlicenseFeeUSD'=>$perUnitlicenseFeeUSD
             ));
 
+        }else{
+            $apps[] = $type->categoryId;
+            $categoryId = $type->categoryId;
+            $checkName->categoryId = $categoryId;
+            $checkName->save();
         }
 
     }

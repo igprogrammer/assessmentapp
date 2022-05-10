@@ -21,7 +21,7 @@ class GeneralController extends Controller
 
 
     public static function businessLicenceFeeCalculator($applyFeeinUsd,$categoryId,$sharePercntForeign,$sharePercntLocal,$isPerUnitFeeApplicable,
-                                                        $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate=null)
+                                                        $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate=null,$principalUsdFee,$principalTzsFee,$licenceType)
     {
 
         $ExpireDate = $expireDate;
@@ -128,7 +128,7 @@ class GeneralController extends Controller
                         $months = $months;
                         $penaltyPercentage = self::getPenaltyPercentage($months);
                         $data = self::getBill($applyFeeinUsd,$categoryId,$sharePercntForeign,$sharePercntLocal,$isPerUnitFeeApplicable,
-                            $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate);
+                            $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate,$principalUsdFee,$principalTzsFee,$licenceType);
 
                         $billAmount = $data->getData()->billAmount;
                         $amountWithPenalty = $data->getData()->amountWithPenalty;
@@ -204,7 +204,7 @@ class GeneralController extends Controller
                         $months = $months;
                         $penaltyPercentage = self::getPenaltyPercentage($months);
                         $data = self::getBill($applyFeeinUsd,$categoryId,$sharePercntForeign,$sharePercntLocal,$isPerUnitFeeApplicable,
-                            $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate);
+                            $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate,$principalUsdFee,$principalTzsFee,$licenceType);
 
                         $billAmount = $data->getData()->billAmount;
                         $amountWithPenalty = $data->getData()->amountWithPenalty;
@@ -288,8 +288,9 @@ class GeneralController extends Controller
             $months = $months;
 
             $penaltyPercentage = self::getPenaltyPercentage($months);
+
             $data = self::getBill($applyFeeinUsd,$categoryId,$sharePercntForeign,$sharePercntLocal,$isPerUnitFeeApplicable,
-                $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate);
+                $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate,$principalUsdFee,$principalTzsFee,$licenceType);
 
             $billAmount = $data->getData()->billAmount;
             $amountWithPenalty = $data->getData()->amountWithPenalty;
@@ -307,15 +308,25 @@ class GeneralController extends Controller
 
 
     public static function getBill($applyFeeinUsd,$categoryId,$sharePercntForeign,$sharePercntLocal,$isPerUnitFeeApplicable,
-                                   $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate=null){
+                                   $branchLicenseFeeUsd,$perUnitlicenseFeeUSD,$noOfUnits,$branchLicenseFeeTShs,$perUnitlicenseFeeTShs,$expireDate=null,$principalFeeUsd,$principalFeeTzs,$licenceType){
         if ($applyFeeinUsd == 1){
 
             if ($categoryId == 28){
                 if ($sharePercntForeign > $sharePercntLocal){
                     if ($isPerUnitFeeApplicable == 1){
-                        $billAmount = $branchLicenseFeeUsd + ($perUnitlicenseFeeUSD * $noOfUnits);
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeUsd + ($perUnitlicenseFeeUSD * $noOfUnits);
+                        }else{
+                            $billAmount = $branchLicenseFeeUsd + ($perUnitlicenseFeeUSD * $noOfUnits);
+                        }
+
                     }else{
-                        $billAmount = $branchLicenseFeeUsd;
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeUsd;
+                        }else{
+                            $billAmount = $branchLicenseFeeUsd;
+                        }
+
                     }
 
                     $amountWithPenalty = $billAmount * exRate();
@@ -323,9 +334,19 @@ class GeneralController extends Controller
                 }else{
 
                     if ($isPerUnitFeeApplicable == 1){
-                        $billAmount = $branchLicenseFeeTShs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeTzs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                        }else{
+                            $billAmount = $branchLicenseFeeTShs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                        }
+
                     }else{
-                        $billAmount = $branchLicenseFeeTShs;
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeTzs;
+                        }else{
+                            $billAmount = $branchLicenseFeeTShs;
+                        }
+
                     }
 
                     $amountWithPenalty = $billAmount;
@@ -335,9 +356,18 @@ class GeneralController extends Controller
 
                 if ($sharePercntForeign > $sharePercntLocal){
                     if ($isPerUnitFeeApplicable == 1){
-                        $billAmount = $branchLicenseFeeUsd + ($perUnitlicenseFeeUSD * $noOfUnits);
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeUsd + ($perUnitlicenseFeeUSD * $noOfUnits);
+                        }else{
+                            $billAmount = $branchLicenseFeeUsd + ($perUnitlicenseFeeUSD * $noOfUnits);
+                        }
+
                     }else{
-                        $billAmount = $branchLicenseFeeUsd;
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeUsd;
+                        }else{
+                            $billAmount = $branchLicenseFeeUsd;
+                        }
                     }
 
                     $amountWithPenalty = $billAmount * exRate();
@@ -345,9 +375,17 @@ class GeneralController extends Controller
                 }else{
 
                     if ($isPerUnitFeeApplicable == 1){
-                        $billAmount = $branchLicenseFeeTShs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeTzs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                        }else{
+                            $billAmount = $branchLicenseFeeTShs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                        }
                     }else{
-                        $billAmount = $branchLicenseFeeTShs;
+                        if ($licenceType == 1){
+                            $billAmount = $principalFeeTzs;
+                        }else{
+                            $billAmount = $branchLicenseFeeTShs;
+                        }
                     }
 
                     $amountWithPenalty = $billAmount;
@@ -370,11 +408,19 @@ class GeneralController extends Controller
         }
         else{
 
-
             if ($isPerUnitFeeApplicable == 1){
-                $billAmount = $branchLicenseFeeTShs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                if ($licenceType == 1){
+                    $billAmount = $principalFeeTzs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                }else{
+                    $billAmount = $branchLicenseFeeTShs + ($perUnitlicenseFeeTShs * $noOfUnits);
+                }
             }else{
-                $billAmount = $branchLicenseFeeTShs;
+
+                if ($licenceType == 1){
+                    $billAmount = $principalFeeTzs;
+                }else{
+                    $billAmount = $branchLicenseFeeTShs;
+                }
             }
 
             $amountWithPenalty = $billAmount;

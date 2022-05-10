@@ -546,7 +546,7 @@ class AssessmentController extends Controller
                         //create new entry in the payments table
                         $payment = Payment::savePayment($customer_id,$temp_payment->id,$total_amount,$temp_payment->account_code,
                             $temp_payment->currency,$temp_payment->company_number,$invoice,$re_assessment_description,$bookingId,
-                            $temp_payment->calculationType,$temp_payment->licenceType,$temp_payment->phone_number,$entityType);
+                            $temp_payment->calculationType,$temp_payment->licenceType,$temp_payment->phone_number,$entityType,$regDate);
 
                         //return payment id
                         $payment_id = $payment->id;
@@ -558,7 +558,7 @@ class AssessmentController extends Controller
                         $attach = AssessmentAttachment::updateAssessmentAttachment($temp_payment_id,$payment_id);
 
                         //get items
-                        $temp_items = TempItem::where('temp_payment_id','=',$temp_payment_id)->get();
+                        $temp_items = TempItem::where(['temp_payment_id'=>$temp_payment_id,'isToPermanent'=>0])->get();
                         $smd = array();
                         if (!empty($temp_items)){
                             foreach ($temp_items as $temp_item){
@@ -612,30 +612,42 @@ class AssessmentController extends Controller
 
                         //Start GePG processing here
 
-                        if (!empty($bill)){
+                        $booking = Payment::getPaymentInfoByBookingId($bookingId);
+                        if ((int)$booking->invoice < initialControlNumber()){
+                            if (!empty($bill)){
 
-                            $data = BillingController::generateBill($payment->reference,$payment_id);
-                            $response = $data->getData()->result;
-                            $message = $data->getData()->message;
+                                $data = BillingController::generateBill($payment->reference,$payment_id);
+                                $response = $data->getData()->result;
+                                $message = $data->getData()->message;
 
+                            }else{
+                                $response = 2;
+                                $message = "Failed to get control number";
+                            }
                         }else{
-                            $response = 2;
-                            $message = "Failed to get control number";
+                            $response = 1;
+                            $message = "The Bill control number has already been received";
                         }
+
+
 
                         /*End GePG content*/
 
                         //sleep the process for 5 seconds to allow GePG processing
                         sleep(5);
 
-                        //call function to save and update control number
-                        $payment = Payment::getPaymentInfoByBookingId($bookingId);
-                        $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$payment->invoice,$bill->billId,$message);
-                        //DB::commit();
+                        if ((int)$booking->invoice < initialControlNumber()){
+                            //call function to save and update control number
+                            $payment = Payment::getPaymentInfoByBookingId($bookingId);
+                            $data = BillingController::receiveAndUpdateBillControlNumber($response,$payment->reference,$payment->invoice,$bill->billId,$message);
+                            //DB::commit();
 
-                        $result = $data->getData()->result;
-                        $message = $data->getData()->message;
-                        $status = $data->getData()->status;
+                            $result = $data->getData()->result;
+                            $message = $data->getData()->message;
+                            $status = $data->getData()->status;
+                        }else{
+                            $result = 1;
+                        }
 
                         if (/*$tempStatus == 2*/ $result == 1){
                             $message = Auth::user()->name.' '.$message." for entity number: ".$company_number;
@@ -1845,6 +1857,7 @@ class AssessmentController extends Controller
         $expire_days = $request->expire_days;
 
         $number_of_files = $request->number_of_files;
+        $penaltyAmount = 0;
 
         $f = Fee::find($fee_id);
         if ($f->account_code == 440342){
@@ -3155,273 +3168,39 @@ class AssessmentController extends Controller
                         $ExpireDate = $filing_date;
                         $days = 21;
 
-                        $Expire_year = date('Y',strtotime($ExpireDate));
-                        $Expire_month = date('m',strtotime($ExpireDate));
-                        $Expire_day = date('d',strtotime($ExpireDate));
-                        $current_month = date('m', strtotime($current_date));
-                        $current_year = date('Y', strtotime($current_date));
-
-                        $ExDate = new \DateTime($ExpireDate);
-                        $curDate = new \DateTime($current_date);
-
-                        $diff = $curDate->diff($ExDate);
-                        $year_difference= $diff->y;
-                        $ydiff = $diff->y;
-                        $yr_diff = $diff->y;
-                        $month_difference=$diff->m;
-                        $days_difference = $diff->d;
-
-                        $currentPayableLicenceAmount = 0;
-                        $penalty_amount = 0;
-
-                        if ($year_difference >= 1){
+                        $applyFeeInUsd = $fee_item->applyFeeInUsd;
+                        $principalUsdFee = $fee_item->principalUsdFee;
+                        $principalTzsFee = $fee_item->principalTzsFee;
+                        $branchUsdFee = $fee_item->branchUsdFee;
+                        $branchTzsFee = $fee_item->branchTzsFee;
+                        $scheduleType = $fee_item->licenceType;
+                        $isPerUnitFeeApplicable = $fee_item->isPerUnitFeeApplicable;
+                        $perUnitlicenseFeeTShs = $fee_item->perUnitlicenseFeeTShs;
+                        $perUnitlicenseFeeUSD = $fee_item->perUnitlicenseFeeUSD;
+                        $categoryId = $fee_item->categoryId;
 
 
-                            $fee_amount = 0;
-                            //check if to grant grace period to the current year
-                            if ((int)$Expire_month <= (int)$current_month){//if expire date is less than or equal to the current month
-
-                                for ($year_difference; ((int)$current_year - (int)$year_difference) <= (int)$current_year; $year_difference--){
-
-                                    if ((int)$current_year == ((int)$current_year - (int)$year_difference)) {//current year
-                                        //check if to add grace period
-                                        $calculation_year = ($current_year - $year_difference);
-                                        //allow grace period
-                                        $ExpireD = date("Y-m-d", strtotime($ExpireDate . '+ ' . $days . ' days'));
-                                        $ExpiryMonth = date('m',strtotime($ExpireD));
-                                        $ExpiryDay = \date('d',strtotime($ExpireD));
-
-                                        $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
-                                        $calculation_date = date('Y-m-d',strtotime($calculation_date));
-                                        $calc_date = $calculation_date;
-
-
-                                        $today_date = date('Y-m-d');
-
-                                        if ($calculation_date < $today_date){
-
-
-                                            $calculation_date = new \DateTime($calculation_date);
-                                            $diff = $calculation_date->diff($curDate);
-                                            $difference_in_years = $diff->y;
-                                            $difference_months = $diff->m;
-                                            $difference_days = $diff->d;
-
-                                            if ($difference_days >= 30){
-
-                                                $number_of_days = (int)fmod($difference_days,30);
-                                                if ($number_of_days > 0){
-                                                    //$number_of_months = 1;//for cm
-                                                    $number_of_months = 0;
-                                                    $months = $difference_months + $number_of_months;
-                                                }elseif ($number_of_days == 0){
-                                                    if ($difference_months > 0){
-                                                        $months = $difference_months;
-                                                    }else{
-                                                        $months = $difference_days/30;
-                                                    }
-
-                                                }else{
-                                                    $months = $difference_months;
-                                                }
-
-                                            }else{
-
-                                                if ($difference_months > 0){
-                                                    $months = $difference_months;
-                                                }else{
-                                                    $months = 0;
-                                                }
-                                            }
-                                        }else{
-                                            $months = 0;
-                                        }
-
-
-                                        //call function to get penalty percentage by passing number of months elapsed
-                                        $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
-
-
-                                    }
-                                    else{//not current year
-
-                                        $calculation_year = ($current_year - $year_difference);
-                                        //allow grace period
-                                        $ExpireD = date("Y-m-d", strtotime($ExpireDate . '+ ' . $days . ' days'));
-                                        $ExpiryMonth = date('m',strtotime($ExpireD));
-                                        $ExpiryDay = \date('d',strtotime($ExpireD));
-
-                                        $calculation_date = $calculation_year.'-'.$ExpiryMonth.'-'.$ExpiryDay;
-                                        $calculation_date = date('Y-m-d',strtotime($calculation_date));
-
-                                        $today_date = date('Y-m-d');
-                                        $months = 0;
-                                        if ($calculation_date < $today_date){
-
-
-                                            $calculation_date = new \DateTime($calculation_date);
-                                            $diff = $calculation_date->diff($curDate);
-                                            $difference_in_years = $diff->y;
-                                            $difference_months = $diff->m;
-                                            $difference_days = $diff->d;
-
-
-
-                                            if ($difference_in_years > 0){
-                                                $months = $difference_in_years * 12;
-                                            }
-
-                                            if ($difference_days >= 30){
-
-                                                $number_of_days = (int)fmod($difference_days,30);
-                                                if ($number_of_days > 0){
-                                                    //$number_of_months = 1;//for cm
-                                                    $number_of_months = 0;
-                                                    $months = $months + ($difference_months + $number_of_months);
-                                                }elseif ($number_of_days == 0){
-                                                    if ($difference_months > 0){
-                                                        $months = $months + $difference_months;
-                                                    }else{
-                                                        $months = $months + $difference_days/30;
-                                                    }
-
-                                                }else{
-                                                    $months = $months + $difference_months;
-                                                }
-
-                                            }
-                                            else{
-
-                                                if ($difference_months > 0){
-                                                    $months = $months + $difference_months;
-                                                }else{
-                                                    $months = $months + 0;
-                                                }
-                                            }
-
-
-                                        }
-
-                                        $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
-
-                                    }
-
-
-
-                                    if ($calculationType == 1){//local
-
-                                        if ($licenceType == 1){
-
-                                            $penalty = $fee_item->principalTzsFee * $penaltyPercentage;
-                                            $amount = $fee_item->principalTzsFee + $penalty;
-
-                                        }else{
-                                            $penalty = $fee_item->branchTzsFee * $penaltyPercentage;
-                                            $amount = $fee_item->branchTzsFee + $penalty;
-                                        }
-
-                                    }else{//foreign
-
-                                        if ($licenceType == 1){
-
-                                            $penalty = $fee_item->principalUsdFee * $penaltyPercentage;
-                                            $amount = $fee_item->principalUsdFee + $penalty;
-
-                                        }else{
-
-                                            $penalty = $fee_item->branchUsdFee * $penaltyPercentage;
-                                            $amount = $fee_item->branchUsdFee + $penalty;
-
-                                        }
-
-                                    }
-
-                                    $currentPayableLicenceAmount = $currentPayableLicenceAmount + $amount;
-                                    $penalty_amount = $penalty_amount + $penalty;
-
-
-                                }
-                            }
+                        if ($calculationType == 1){
+                            $sharePercentLocal = 100;
+                            $sharePercentForeign= 0;
+                        }else{
+                            $sharePercentLocal = 0;
+                            $sharePercentForeign= 100;
                         }
-                        else{
 
-                            $months = 0;
+                        $data = GeneralController::businessLicenceFeeCalculator($applyFeeInUsd,$categoryId,$sharePercentForeign,$sharePercentLocal,$isPerUnitFeeApplicable,$branchUsdFee,
+                            $perUnitlicenseFeeUSD,$number_of_files,$branchTzsFee,$perUnitlicenseFeeTShs,$ExpireDate,$principalUsdFee,$principalTzsFee,$licenceType);
 
-                            if ($year_difference > 0){
-                                $months = $year_difference * 12;
-                            }
-
-                            if ($days_difference >= 30){
-
-                                $number_of_days = (int)fmod($days_difference,30);
-                                if ($number_of_days > 0){
-                                    //$number_of_months = 1;//for cm
-                                    $number_of_months = 0;
-                                    $months = $months + ($month_difference + $number_of_months);
-                                }elseif ($number_of_days == 0){
-                                    if ($month_difference > 0){
-                                        $months = $months + $month_difference;
-                                    }else{
-                                        $months = $months + $days_difference/30;
-                                    }
-
-                                }else{
-                                    $months = $months + $days_difference;
-                                }
-
-                            }
-                            else{
-
-                                if ($month_difference > 0){
-                                    $months = $months + $month_difference;
-                                }else{
-                                    $months = $months;
-                                }
-                            }
-
-                            $penaltyPercentage = GeneralController::getPenaltyPercentage($months);
-
-                            if ($calculationType == 1){//local
-
-                                if ($licenceType == 1){
-
-                                    $penalty = $fee_item->principalTzsFee * $penaltyPercentage;
-                                    $amount = $fee_item->principalTzsFee + $penalty;
-
-                                }else{
-                                    $penalty = $fee_item->branchTzsFee * $penaltyPercentage;
-                                    $amount = $fee_item->branchTzsFee + $penalty;
-                                }
-
-                            }else{//foreign
-
-                                if ($licenceType == 1){
-
-                                    $penalty = $fee_item->principalUsdFee * $penaltyPercentage;
-                                    $amount = $fee_item->principalUsdFee + $penalty;
-
-                                }else{
-
-                                    $penalty = $fee_item->branchUsdFee * $penaltyPercentage;
-                                    $amount = $fee_item->branchUsdFee + $penalty;
-
-                                }
-
-                            }
-
-                            $currentPayableLicenceAmount = $currentPayableLicenceAmount + $amount;
-                            $penalty_amount = $penalty_amount + $penalty;
-
-
-
-                        }
+                        $billAmount = $data->getData()->billAmount;
+                        $amountWithPenalty = $data->getData()->amountWithPenalty;
+                        $penaltyAmount = $data->getData()->penaltyAmount;
 
 
 
                     }
 
-                    $total_amount = $currentPayableLicenceAmount;
-                    $penalty = $penalty_amount;
+                    $total_amount = $billAmount;
+                    $penalty = $penaltyAmount;
 
                     if ($calculationType == 1){
                         $currency = 'TSHs';
@@ -3457,26 +3236,100 @@ class AssessmentController extends Controller
 
 
                 //save entry
-                $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id])->first();
-                if (empty($checkTempItem)){
-                    $temp_item = new TempItem();
-                    $temp_item->user_id = Auth::user()->id;
-                    $temp_item->fee_item_id = $item_id;
-                    $temp_item->temp_payment_id = $temp_payment_id;
-                    $temp_item->fee_amount = $total_amount;
-                    $temp_item->date_of_payment = $date_of_payment;
-                    $temp_item->account_code = $account_code;
-                    $temp_item->month = $month;
-                    $temp_item->year = $current_year;
-                    $temp_item->fname = $form;
-                    $temp_item->fyear2 = $fyear;
-                    $temp_item->fyear = $fyear;
-                    $temp_item->save();
 
+                if ($account_code == 440342){
+
+                    if ($penalty > 0){
+
+                        $checkTempItem = TempItem::where(['fee_item_id'=>8,'temp_payment_id'=>$temp_payment_id])->first();//penalty fee
+                        if (empty($checkTempItem)){
+
+                            $temp_item = new TempItem();
+                            $temp_item->user_id = Auth::user()->id;
+                            $temp_item->fee_item_id = $item_id;
+                            $temp_item->temp_payment_id = $temp_payment_id;
+                            $temp_item->fee_amount = $penalty;
+                            $temp_item->date_of_payment = $date_of_payment;
+                            $temp_item->account_code = $account_code;
+                            $temp_item->month = $month;
+                            $temp_item->year = $current_year;
+                            $temp_item->fname = $form;
+                            $temp_item->fyear2 = $fyear;
+                            $temp_item->fyear = $fyear;
+                            $temp_item->save();
+
+
+                        }
+
+                        $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id])->first();//penalty fee
+                        if (empty($checkTempItem)){
+
+                            $temp_item = new TempItem();
+                            $temp_item->user_id = Auth::user()->id;
+                            $temp_item->fee_item_id = $item_id;
+                            $temp_item->temp_payment_id = $temp_payment_id;
+                            $temp_item->fee_amount = $total_amount;
+                            $temp_item->date_of_payment = $date_of_payment;
+                            $temp_item->account_code = $account_code;
+                            $temp_item->month = $month;
+                            $temp_item->year = $current_year;
+                            $temp_item->fname = $form;
+                            $temp_item->fyear2 = $fyear;
+                            $temp_item->fyear = $fyear;
+                            $temp_item->save();
+
+                        }
+
+
+
+                    }else{
+
+                        $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id])->first();//penalty fee
+                        if (empty($checkTempItem)){
+
+                            $temp_item = new TempItem();
+                            $temp_item->user_id = Auth::user()->id;
+                            $temp_item->fee_item_id = $item_id;
+                            $temp_item->temp_payment_id = $temp_payment_id;
+                            $temp_item->fee_amount = $total_amount;
+                            $temp_item->date_of_payment = $date_of_payment;
+                            $temp_item->account_code = $account_code;
+                            $temp_item->month = $month;
+                            $temp_item->year = $current_year;
+                            $temp_item->fname = $form;
+                            $temp_item->fyear2 = $fyear;
+                            $temp_item->fyear = $fyear;
+                            $temp_item->save();
+
+
+                        }
+
+                    }
 
                 }else{
-                    return response()->json(['success'=>4]);
+                    $checkTempItem = TempItem::where(['fee_item_id'=>$item_id,'temp_payment_id'=>$temp_payment_id])->first();
+                    if (empty($checkTempItem)){
+
+                        $temp_item = new TempItem();
+                        $temp_item->user_id = Auth::user()->id;
+                        $temp_item->fee_item_id = $item_id;
+                        $temp_item->temp_payment_id = $temp_payment_id;
+                        $temp_item->fee_amount = $total_amount;
+                        $temp_item->date_of_payment = $date_of_payment;
+                        $temp_item->account_code = $account_code;
+                        $temp_item->month = $month;
+                        $temp_item->year = $current_year;
+                        $temp_item->fname = $form;
+                        $temp_item->fyear2 = $fyear;
+                        $temp_item->fyear = $fyear;
+                        $temp_item->save();
+
+
+                    }else{
+                        return response()->json(['success'=>4]);
+                    }
                 }
+
 
 
                 //return response as json

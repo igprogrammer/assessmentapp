@@ -17,6 +17,7 @@ return
         'key_store'=>env('KEY_STORE'),
         'pub_key'=>env('PUB_KEY'),
         'pri_key'=>env('PRI_KEY'),
+        'initial_control_number'=>env('INITIAL_CONTROL_NUMBER'),
 
 
     ];

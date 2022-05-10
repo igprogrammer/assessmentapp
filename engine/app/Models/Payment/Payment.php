@@ -128,7 +128,8 @@ class Payment extends Model
     }
 
     public static function savePayment($customer_id,$temp_payment_id,$total_amount,$account_code,$currency,$company_number,
-                                       $invoice,$re_assessment_description,$bookingId,$calculationType,$licenceType,$billPhoneNumber,$entityType){
+                                       $invoice,$re_assessment_description,$bookingId,$calculationType,$licenceType,
+                                       $billPhoneNumber,$entityType,$regDate){
 
         $data = Payment::where(['temp_payment_id'=>$temp_payment_id])->first();
         if (empty($data)){
@@ -145,10 +146,12 @@ class Payment extends Model
             $payment->month = date('m');
             $payment->year = date('Y');
             $payment->account_code = $account_code;
+            $payment->account = $account_code;
             $payment->pay_type = 'none';
             $payment->currency = $currency;
             $payment->app_print = 'no';
             $payment->regno = $company_number;
+            $payment->reg_date = $regDate;
             $payment->invoice = $invoice;
             $payment->reference = $invoice;
             $payment->re_assessment_description = $re_assessment_description;
