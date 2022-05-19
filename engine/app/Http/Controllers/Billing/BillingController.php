@@ -230,13 +230,15 @@ class BillingController extends Controller
 
 
         //return signed xml content
-        $billContent = self::signedRequest($billContent,$bookingId,$requestType);
+        $billContent = self::billContent($billContent,$bookingId,$requestType);
+        $content = $billContent;
 
         //update bill xml content
         Billing::updateBill($bookingId,$reference,$billContent);
 
         //save the xml content into the database for references
         Booking::saveBillContent($bookingId,$billContent);
+
 
         $status = ServerListener::checkServerStatus($url);
 
@@ -248,7 +250,7 @@ class BillingController extends Controller
             return response()->json(['result'=>3,'message'=>$msg]);
         }
 
-        $url = $url.'receive-bill';
+        $url = $url.'api/receive-bill';
 
         $req = curl_init();
         curl_setopt( $req, CURLOPT_URL, $url);
@@ -330,61 +332,22 @@ class BillingController extends Controller
 
     }
 
-    public static function signedRequest($billContent,$bookingId,$requestType){
+    public static function billContent($billContent,$bookingId,$requestType){
 
-        $readMessage = null;
-
-        if (!$cert_store = file_get_contents(privKey())) {
-            $readMessage = "Error: Failed to read the certificate file for bill ID: ".$bookingId;
-            ErrorsLog::saveGeneralError($readMessage,$bookingId);
-            echo $readMessage;
-            exit;
-        }else{
-
-
-            if (openssl_pkcs12_read($cert_store,$cert_info,"passpass")){
-
-                //convert array content to xml
-                $billContent = ArrayToXml::convert($billContent);
-
-                //create signature
-                openssl_sign($billContent, $signature, $cert_info['pkey'], "sha1WithRSAEncryption");
-
-                //output crypted data base64 encoded
-                $signature = base64_encode($signature);
-
-                //convert the xml to array
-                $simpleXml = simplexml_load_string($billContent);
-                $json = json_encode($simpleXml);//parse the string to json
-
-                $billContent = json_decode($json,true);//convert the json to a php array variable
-
-                if ($requestType == 'bill'){
-                    $arrayContent = [
-                        'gepgBillSubReq'=>$billContent,
-                        'gepgSignature'=>$signature
-                    ];
-                }elseif ($requestType == 'recon'){
-                    $arrayContent = [
-                        'gepgSpReconcReq'=>$billContent,
-                        'gepgSignature'=>$signature
-                    ];
-                }
-
-
-                //convert array to xml
-                $xmlContent = ArrayToXml::convert($arrayContent);
-                $xml = str_replace('root','Gepg',$xmlContent);
-                return $xml;
-            }else{
-                $readMessage = "Error: Unable to read the certificate store for booking ID: ".$bookingId;
-                ErrorsLog::saveGeneralError($readMessage,$bookingId);
-                echo $readMessage;
-                exit;
-            }
-
-
+        if ($requestType == 'bill'){
+            $replacer = 'gepgBillSubReq';
+            $arrayContent = $billContent;
+        }elseif ($requestType == 'recon'){
+            $replacer = 'gepgSpReconcReq';
+            $arrayContent = $billContent;
         }
+
+        $xmlContent = ArrayToXml::convert($arrayContent);
+        $content = str_replace('root',$replacer,$xmlContent);
+
+        $content = str_replace('<?xml version="1.0"?>','',$content);
+
+        return $content;
 
 
     }

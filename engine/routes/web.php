@@ -15,10 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('xml', function (){
-    $data = \App\Models\SendGepgContent::find(8);
-    $content = $data->xmlContent;
-    $response = BillingController::isXMLContentValid($content,$version = '1.0', $encoding = 'utf-8');
-    dd($response);
+    $data = BillingController::generateBill(31093470,2026);
+    dd($data);
 });
 
 Route::get('bill', function (){
