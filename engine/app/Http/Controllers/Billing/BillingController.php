@@ -273,7 +273,7 @@ class BillingController extends Controller
 
             if ($res['trxStsCode'] == '7101'){
                 $result = 1;
-                $message = 'Success received control number from GePG';
+                $message = 'Successfully received control number from GePG';
             }else{
                 $result = 0;
                 $message = 'Failed to received control number from GePG';
