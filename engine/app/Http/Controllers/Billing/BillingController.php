@@ -262,6 +262,7 @@ class BillingController extends Controller
 
         //Capture returned content from local gateway to GePG
         $requestResponse = curl_exec($req);
+        $requestResponse = str_replace("\n","",$requestResponse);
 
         $response = self::isXMLContentValid($requestResponse,$version = '1.0', $encoding = 'utf-8');
 
@@ -280,7 +281,8 @@ class BillingController extends Controller
                 $message = 'Failed to received control number from GePG';
             }
 
-        }else{
+        }
+        else{
             $result = 0;
             $message = 'Failed to received control number from GePG';
         }

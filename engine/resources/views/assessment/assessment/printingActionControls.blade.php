@@ -1,11 +1,11 @@
-@if((int)$payment->invoice >= 991350000000)
+@if((int)$payment->invoice >= initialControlNumber())
 
     <nav class="nav navbar-nav navbar-right" style="width: 100%">
         <div class="container-fluid">
 
             <ul class="nav navbar-nav navbar-left" style="font-family: arial" >
                 <li class="dropdown">
-                    <a style="font-size: 18px" href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">Actions menu <span class="caret"></span></a>
+                    <a style="font-size: 16px" href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">Actions <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a href="{{ url('assessments/assessment-items') }}/{{ encrypt($payment->id) }}/{{ $flag }}"><i class="glyphicon glyphicon-eye-open"></i> View</a></li>
                         <li><a href="" onclick="print_assessment('{{ encrypt($payment->id) }}','normal')"><i class="glyphicon glyphicon-print"></i> Print normal bill</a></li>
@@ -28,6 +28,8 @@
 @else
     <a style="width: 100%" class="btn btn-warning" href="{{ url('assessments/assessment-items') }}/{{ encrypt($payment->id) }}/{{ $flag }}"><i class="glyphicon glyphicon-eye-open"></i> View</a>
     <br><br>
-    <a onclick="reRequestControlNumber('{{ encrypt($payment->id) }}')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> Request control number</a>
 
+    @if($payment->controlNumber <= initialControlNumber())
+        <a onclick="reRequestControlNumber('{{ encrypt($payment->id) }}')" class="btn btn-primary"><i class="glyphicon glyphicon-print"></i> Request control number</a>
+    @endif
 @endif

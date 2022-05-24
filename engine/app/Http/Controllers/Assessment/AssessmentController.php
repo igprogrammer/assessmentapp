@@ -634,7 +634,7 @@ class AssessmentController extends Controller
                         /*End GePG content*/
 
                         //sleep the process for 5 seconds to allow GePG processing
-                        sleep(5);
+                        sleep(9);
 
                         if ((int)$booking->invoice < initialControlNumber()){
                             //call function to save and update control number

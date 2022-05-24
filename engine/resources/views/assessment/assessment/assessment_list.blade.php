@@ -1,28 +1,28 @@
-<table class="table table-striped table-bordered">
+<table class="table table-striped table-bordered" style="width: 100%">
     <tr>
         <th>
             SNO
         </th>
         <th>
-            Company number
+            Number
         </th>
         <th>
-            Company name
+            Name
         </th>
         <th>
-            Date of assessment
+            Date
         </th>
         <th>
             Currency
         </th>
         <th>
-            Assessment amount
+            Amount
         </th>
         <th>
             Control number
         </th>
         <th>
-            Assessed by
+            Assessor
         </th>
 
         <th>
@@ -54,9 +54,9 @@
                 <td>{{ $payment->invoice }}</td>
                 <td>
                 <?php $user = \App\Models\User::find($payment->user_id); ?>
-               {{-- {{ $user->name }}--}}
+                {{ $user->name }}
                 <td>
-                    @if((int)$payment->invoice >= 991350000000)
+                    @if((int)$payment->invoice >= initialControlNumber())
                         @if($payment->isPaid == 1)
                             <a class="btn btn-success" style="width: 100%"><i class="glyphicon glyphicon-check"> Paid</i></a>
                         @else
