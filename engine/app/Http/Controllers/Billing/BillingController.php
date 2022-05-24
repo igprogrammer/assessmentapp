@@ -250,7 +250,8 @@ class BillingController extends Controller
             return response()->json(['result'=>3,'message'=>$msg]);
         }
 
-        $url = $url.'api/receive-bill';
+        //$url = $url.'api/receive-bill';
+        $url = $url.'receive-bill';
 
         $req = curl_init();
         curl_setopt( $req, CURLOPT_URL, $url);
