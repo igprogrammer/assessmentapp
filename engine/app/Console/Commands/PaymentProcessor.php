@@ -45,6 +45,7 @@ class PaymentProcessor extends Command
             self::generate_receipt();
         }catch (\Exception $exception){
             $message = $exception->getMessage().' on line number '.$exception->getLine().' in file '.$exception->getFile();
+            dd($message);
             Log::channel('generate-receipt')->info($message);
         }
     }
@@ -63,7 +64,7 @@ class PaymentProcessor extends Command
                 $data = $xmlContent;
                 $b_id = $incomingPayment->billId;
 
-                $amount = $incomingPayment->PaidAmount;
+                $amount = $incomingPayment->PaidAmt;
                 $currency = $incomingPayment->CCy;
                 $paymentMethod = $incomingPayment->UsdPayChnl;
                 $bankName = $incomingPayment->PspName;
@@ -132,7 +133,7 @@ class PaymentProcessor extends Command
 
                                 sleep(2);
 
-                                echo "Stamp Successfully Processed";
+                                echo "Normal Payment Successfully Processed";
 
 
 

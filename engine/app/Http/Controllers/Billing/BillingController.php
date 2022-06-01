@@ -77,6 +77,7 @@ class BillingController extends Controller
                 if ((int)$payment->invoice < initialControlNumber())
 
                 $data = BillingController::generateBill($bill->reference,$paymentId);
+                dd($data);
                 $response = $data->getData()->result;
                 $message = $data->getData()->message;
 
@@ -263,8 +264,10 @@ class BillingController extends Controller
         //Capture returned content from local gateway to GePG
         $requestResponse = curl_exec($req);
         $requestResponse = str_replace("\n","",$requestResponse);
+        dd($requestResponse);
 
         $response = self::isXMLContentValid($requestResponse,$version = '1.0', $encoding = 'utf-8');
+        dd($response);
 
         if ($response == true){
 

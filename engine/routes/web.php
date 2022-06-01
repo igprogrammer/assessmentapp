@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('xml', function (){
-    $data = BillingController::generateBill(31011033,3029);
+    $data = BillingController::generateBill(31250352,3059);
     dd($data);
 });
 
