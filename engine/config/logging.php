@@ -80,6 +80,13 @@ return [
             'days' => 14,
         ],
 
+        'migration' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/migration/migration.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
         'fee-error' => [
             'driver' => 'daily',
             'path' => storage_path('logs/fee/fee-error.log'),

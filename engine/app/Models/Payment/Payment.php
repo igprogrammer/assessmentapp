@@ -40,7 +40,7 @@ class Payment extends Model
     }
 
     public static function markPaymentAsReceived($bookingId,$amount,$payDate,$bankName,$phoneNumber,
-                                                 $bankTransactionId,$mobileTransactionId,$paymentMethod,$PayRefId,$TrxStsCode,$PspReceiptNumber,$payMonth,$payYear){
+                                                 $bankTransactionId,$mobileTransactionId,$paymentMethod,$PayRefId,$TrxStsCode,$PspReceiptNumber,$payMonth,$payYear,$spCode){
 
         DB::table('payments')->where(['bookingId'=>$bookingId])->update(array(
             'isPaid'=>1,
@@ -57,6 +57,7 @@ class Payment extends Model
             'gepgStatus'=>$TrxStsCode,
             'payMonth'=>$payMonth,
             'payYear'=>$payYear,
+            'spCode'=>$spCode,
             'paymentEntryDate'=>Carbon::now('Africa/Dar_es_Salaam')));
 
     }

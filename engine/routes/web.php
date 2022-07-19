@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::get('migrate',[\App\Http\Controllers\AssessmentMigrationController::class,'migration']);
 Route::get('xml', function (){
     $data = BillingController::generateBill(31250352,3059);
     dd($data);

@@ -76,6 +76,7 @@ class PaymentProcessor extends Command
                 $phoneNumber = $incomingPayment->PyrCellNum;
                 $PayRefId = $incomingPayment->PayRefId;
                 $PspReceiptNumber = $incomingPayment->PspReceiptNumber;
+                $spCode = $incomingPayment->SpCode;
 
                 //$pay_date = date('Y-m-d H:i:s',strtotime($pay_date));
                 $payMonth = date('m',strtotime($payDate));
@@ -97,7 +98,7 @@ class PaymentProcessor extends Command
                             $phoneNumber = $billInfo->phone_number;
                         }
 
-                        Payment::markPaymentAsReceived($bookingId,$amount,$payDate,$bankName,$phoneNumber,$bankTransactionId,$mobileTransactionId,$paymentMethod,$PayRefId,7101,$PspReceiptNumber,$payMonth,$payYear);
+                        Payment::markPaymentAsReceived($bookingId,$amount,$payDate,$bankName,$phoneNumber,$bankTransactionId,$mobileTransactionId,$paymentMethod,$PayRefId,7101,$PspReceiptNumber,$payMonth,$payYear,$spCode);
 
                         $paymentInfo = Payment::getPaymentInfoByBookingId($bookingId);
 
