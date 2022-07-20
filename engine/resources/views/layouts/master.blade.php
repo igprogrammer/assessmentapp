@@ -675,7 +675,29 @@
        }
        else{
 
-           if(companyNumber != null && companyNumber > 0 ){
+           if(companyNumber != null){
+
+               if (companyNumber.toLowerCase() == 'aripo'){
+                   companyNumber = companyNumber;
+               }else {
+                   if (companyNumber < 0){
+                       bootbox.dialog({
+                           closeButton: false,
+                           message: "&nbsp;&nbsp;&nbsp;The number cannot be less than zero",
+                           title: "&nbsp;&nbsp;Action information",
+                           buttons: {
+                               main: {
+                                   label: "Okay",
+                                   className: "btn-primary",
+                                   callback: function() {
+                                       //do something else
+                                      return false;
+                                   }
+                               }
+                           }
+                       });
+                   }
+               }
 
                if(window.XMLHttpRequest) {
                    myObject = new XMLHttpRequest();

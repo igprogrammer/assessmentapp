@@ -3,12 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment\Payment;
+use App\Models\Payment\PaymentFee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AssessmentMigrationController extends Controller
 {
+    public static function migrate(){
+
+        $entries = DB::connection('sqlsrv_t')->table('exchange_rates')->get();
+        $apps = array();
+        foreach ($entries as $entry){
+            $apps[] = $entry->id;
+            DB::connection('sqlsrv')->table('exchange_rates')->insert(array(
+                'user_id'=>1,
+                'exchange_rate'=>$entry->exchange_rate,
+                'bl_exchange_rates'=>$entry->bl_exchange_rates,
+                'created_at'=>now(),
+                'updated_at'=>now()
+            ));
+
+        }
+
+        dd(count($apps));
+
+    }
     public static function migration(){
 
         try {
@@ -214,6 +234,28 @@ class AssessmentMigrationController extends Controller
                         $payInfo->isReceiptPrinted = 1;
                         dd($payInfo);
                         $payInfo->save();
+
+                        $items = DB::connection('mysql_b')->table('payment_fees')->where(['payment_id'=>$payment_id])->get();
+
+                        if (!empty($items)){
+                            foreach ($items as $item){
+                                //insert into payment_fees
+                                $pf = new PaymentFee();
+                                $pf->user_id = $user_id;
+                                $pf->payment_id = $payInfo->id;
+                                $pf->fee_item_id = $item->fees_id;
+                                $pf->temp_payment_id = '';
+                                $pf->fee_amount = $item->fee_amount;
+                                $pf->date_of_payment = $date_of_payment;
+                                $pf->account_code = $account_code;
+                                $pf->month = $month;
+                                $pf->year = $year;
+                                $pf->fname = $item-fname;
+                                $pf->fyear = $item->fyear;
+                                $pf->fyear2 = $item->fyear2;
+                                $pf->save();
+                            }
+                        }
 
                         //update
                         DB::connection('mysql_b')->table('payment')->where(['payment_id'=>$payment_id])->update(array('migrated'=>1));

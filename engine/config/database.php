@@ -173,6 +173,20 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
+
+        'sqlsrv_t' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST_T', 'localhost'),
+            'port' => env('DB_PORT_T', '1433'),
+            'database' => env('DB_DATABASE_T', 'forge'),
+            'username' => env('DB_USERNAME_T', 'forge'),
+            'password' => env('DB_PASSWORD_T', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
         'sqlsrv_orsreg' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
